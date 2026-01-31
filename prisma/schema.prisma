@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SDR
+  MANAGER
+}
+
+model User {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  role      Role         @default(SDR)
+  entries   DailyEntry[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model DailyEntry {
+  id                     String   @id @default(cuid())
+  userId                 String
+  date                   String
+  goalDials              Int?
+  goalNewProspects       Int?
+  goalSetsTotal          Int?
+  goalSetsNewBiz         Int?
+  goalSetsExpansion      Int?
+  goalSQOs               Int?
+  focusText              String?
+  actualDials            Int?
+  actualNewProspects     Int?
+  actualSetsNewBiz       Int?
+  actualSetsExpansion    Int?
+  actualSQOs             Int?
+  notes                  String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+}
