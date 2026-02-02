@@ -6,6 +6,8 @@ import { getMonthKeys, getMonthRange } from "@/lib/date";
 import { isManagerAuthed } from "@/lib/auth";
 import { addRep, deleteRep, managerLogin, managerLogout } from "@/app/actions";
 
+export const dynamic = "force-dynamic";
+
 type MetricTotals = {
   dials: number;
   prospects: number;

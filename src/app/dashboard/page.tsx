@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getPresetRange } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
 
+export const dynamic = "force-dynamic";
+
 type DashboardProps = {
   searchParams?: {
     range?: string;

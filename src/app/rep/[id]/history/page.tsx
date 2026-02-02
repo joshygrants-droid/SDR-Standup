@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { todayISO, yesterdayISO } from "@/lib/date";
 import { saveActuals, saveGoals } from "@/app/actions";
 
+export const dynamic = "force-dynamic";
+
 type HistoryPageProps = {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ date?: string; section?: string; saved?: string }>;

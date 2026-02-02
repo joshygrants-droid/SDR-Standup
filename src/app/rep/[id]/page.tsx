@@ -4,6 +4,8 @@ import { MIN_DIALS, MIN_NEW_PROSPECTS } from "@/lib/constants";
 import { todayISO, yesterdayISO } from "@/lib/date";
 import { saveActuals, saveGoals } from "@/app/actions";
 
+export const dynamic = "force-dynamic";
+
 type RepPageProps = {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ saved?: string }>;

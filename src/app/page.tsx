@@ -2,6 +2,8 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { managerLogin, selectRep } from "@/app/actions";
 
+export const dynamic = "force-dynamic";
+
 type HomeProps = {
   searchParams?: { error?: string };
 };

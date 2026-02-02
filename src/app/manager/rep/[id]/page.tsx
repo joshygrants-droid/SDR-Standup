@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isManagerAuthed } from "@/lib/auth";
 import { addDaysISO, listISODateRange, isWeekday, todayISO } from "@/lib/date";
 
+export const dynamic = "force-dynamic";
+
 export default async function ManagerRepDetail({
   params,
 }: {
