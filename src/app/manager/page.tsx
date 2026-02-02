@@ -89,7 +89,7 @@ export default async function ManagerPage({
           )}
           <button
             type="submit"
-            className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="w-full rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
           >
             Enter Manager Hub
           </button>
@@ -174,7 +174,7 @@ export default async function ManagerPage({
           />
           <button
             type="submit"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            className="rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
           >
             Add SDR
           </button>
