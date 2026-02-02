@@ -7,7 +7,7 @@ import { addDaysISO, listISODateRange, isWeekday, todayISO } from "@/lib/date";
 export default async function ManagerRepDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   if (!(await isManagerAuthed())) {
     return (
@@ -26,7 +26,10 @@ export default async function ManagerRepDetail({
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { id: params.id } });
+  const { id } = await params;
+  if (!id) return notFound();
+
+  const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return notFound();
 
   const end = todayISO();

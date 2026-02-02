@@ -4,7 +4,7 @@ Lightweight Next.js app for outbound SDR standups and performance tracking.
 
 ## Stack
 - Next.js (App Router) + TypeScript
-- Prisma + SQLite
+- Prisma + Postgres (Neon on Vercel)
 - Tailwind CSS
 - Simple auth-lite (select name + manager PIN)
 
@@ -20,7 +20,8 @@ cp .env.example .env
 ```
 Edit `.env` to set your manager PIN.
 
-3) Initialize the database + seed sample reps
+3) Set up the database + seed sample reps
+Use a Postgres database (Neon recommended). Set `DATABASE_URL` to your connection string.
 ```bash
 npx prisma migrate dev --name init
 npm run seed
@@ -47,5 +48,10 @@ npx prisma studio
 ```
 
 ## Env Vars
-- `DATABASE_URL` (default: `file:./dev.db`)
+- `DATABASE_URL` (Postgres connection string)
 - `MANAGER_PIN` (required for manager access)
+
+## Vercel + Neon Setup
+1) In Vercel, create a Neon Postgres database (Marketplace).
+2) Copy the Production connection string into `DATABASE_URL` for all environments.
+3) Deploy.

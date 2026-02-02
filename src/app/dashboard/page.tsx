@@ -15,6 +15,39 @@ type DashboardProps = {
   };
 };
 
+type LeaderboardRow = {
+  id: string;
+  name: string;
+  dials: number;
+  prospects: number;
+  setsNewBiz: number;
+  setsExpansion: number;
+  setsTotal: number;
+  sqos: number;
+};
+
+type MetricKey = Exclude<keyof LeaderboardRow, "id" | "name">;
+type SortKey = "name" | "metric";
+type SortDirection = "asc" | "desc";
+
+const metricKeys: MetricKey[] = [
+  "dials",
+  "prospects",
+  "setsNewBiz",
+  "setsExpansion",
+  "setsTotal",
+  "sqos",
+];
+
+const isMetricKey = (value?: string): value is MetricKey =>
+  !!value && metricKeys.includes(value as MetricKey);
+
+const isSortKey = (value?: string): value is SortKey =>
+  value === "name" || value === "metric";
+
+const isDirection = (value?: string): value is SortDirection =>
+  value === "asc" || value === "desc";
+
 function resolveRange(searchParams?: DashboardProps["searchParams"]) {
   const range = searchParams?.range ?? "yesterday";
   if (range === "custom" && searchParams?.start && searchParams?.end) {
@@ -28,9 +61,15 @@ function resolveRange(searchParams?: DashboardProps["searchParams"]) {
 
 export default async function DashboardPage({ searchParams }: DashboardProps) {
   const { range, start, end } = resolveRange(searchParams);
-  const metric = searchParams?.metric ?? "dials";
-  const sort = searchParams?.sort ?? "metric";
-  const direction = searchParams?.direction ?? "desc";
+  const metric: MetricKey = isMetricKey(searchParams?.metric)
+    ? searchParams?.metric
+    : "dials";
+  const sort: SortKey = isSortKey(searchParams?.sort)
+    ? searchParams?.sort
+    : "metric";
+  const direction: SortDirection = isDirection(searchParams?.direction)
+    ? searchParams?.direction
+    : "desc";
   const baseQuery = { range, start, end, metric };
 
   const entries = await prisma.dailyEntry.findMany({
@@ -75,7 +114,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     },
   });
 
-  const rows = reps.map((rep) => {
+  const rows: LeaderboardRow[] = reps.map((rep) => {
     const base = {
       dials: 0,
       prospects: 0,
@@ -103,9 +142,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     }
-    const diff =
-      (b as typeof rows[number])[metric as keyof typeof rows[number]] -
-      (a as typeof rows[number])[metric as keyof typeof rows[number]];
+    const diff = b[metric] - a[metric];
     return direction === "asc" ? -diff : diff;
   });
 
