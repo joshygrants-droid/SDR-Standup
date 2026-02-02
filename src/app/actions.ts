@@ -147,6 +147,8 @@ export async function saveActuals(formData: FormData) {
     actualSetsNewBiz: parseIntField(formData.get("actualSetsNewBiz")),
     actualSetsExpansion: parseIntField(formData.get("actualSetsExpansion")),
     actualSQOs: parseIntField(formData.get("actualSQOs")),
+    wins: String(formData.get("wins") || "").trim() || null,
+    blockers: String(formData.get("blockers") || "").trim() || null,
     notes: String(formData.get("notes") || "").trim() || null,
   };
 

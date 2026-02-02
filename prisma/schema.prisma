@@ -38,6 +38,8 @@ model DailyEntry {
   actualSetsNewBiz       Int?
   actualSetsExpansion    Int?
   actualSQOs             Int?
+  wins                   String?
+  blockers               String?
   notes                  String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt

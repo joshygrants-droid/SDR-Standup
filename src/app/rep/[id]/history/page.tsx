@@ -47,6 +47,8 @@ export default async function RepHistoryPage({
   const actualSetsNewBiz = entry?.actualSetsNewBiz ?? "";
   const actualSetsExpansion = entry?.actualSetsExpansion ?? "";
   const actualSQOs = entry?.actualSQOs ?? "";
+  const wins = entry?.wins ?? "";
+  const blockers = entry?.blockers ?? "";
   const notes = entry?.notes ?? "";
 
   const redirectTo = `/rep/${user.id}/history?date=${selectedDate}&section=${section}`;
@@ -295,7 +297,27 @@ export default async function RepHistoryPage({
             </label>
 
             <label className="text-sm font-medium text-slate-700">
-              Notes (blockers / wins)
+              Wins
+              <textarea
+                name="wins"
+                defaultValue={wins}
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="text-sm font-medium text-slate-700">
+              Blockers
+              <textarea
+                name="blockers"
+                defaultValue={blockers}
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="text-sm font-medium text-slate-700">
+              Notes (optional)
               <textarea
                 name="notes"
                 defaultValue={notes}

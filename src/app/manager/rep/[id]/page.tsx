@@ -2,7 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isManagerAuthed } from "@/lib/auth";
-import { addDaysISO, listISODateRange, isWeekday, todayISO } from "@/lib/date";
+import {
+  addDaysISO,
+  listISODateRange,
+  isWeekday,
+  todayISO,
+  yesterdayISO,
+} from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +41,15 @@ export default async function ManagerRepDetail({
   if (!user) return notFound();
 
   const end = todayISO();
+  const yesterday = yesterdayISO();
   const start = addDaysISO(end, -30);
   const entries = await prisma.dailyEntry.findMany({
     where: { userId: user.id, date: { gte: start, lte: end } },
     orderBy: { date: "desc" },
   });
+
+  const todayEntry = entries.find((entry) => entry.date === end);
+  const yesterdayEntry = entries.find((entry) => entry.date === yesterday);
 
   const last14Start = addDaysISO(end, -13);
   const last14Dates = listISODateRange(last14Start, end).filter(isWeekday);
@@ -82,6 +92,54 @@ export default async function ManagerRepDetail({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Today + Yesterday Detail
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Today: {end} · Yesterday: {yesterday}
+        </p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Today’s Plan
+            </p>
+            <div className="mt-3 space-y-2 text-sm text-slate-700">
+              <div>
+                Goals: Dials {todayEntry?.goalDials ?? "-"} · Prospects{" "}
+                {todayEntry?.goalNewProspects ?? "-"} · Sets{" "}
+                {todayEntry?.goalSetsTotal ?? "-"} · SQOs{" "}
+                {todayEntry?.goalSQOs ?? "-"}
+              </div>
+              <div>
+                Target Focus: {todayEntry?.focusText?.trim() || "-"}
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Yesterday’s Attainment
+            </p>
+            <div className="mt-3 space-y-2 text-sm text-slate-700">
+              <div>
+                Actuals: Dials {yesterdayEntry?.actualDials ?? "-"} · Prospects{" "}
+                {yesterdayEntry?.actualNewProspects ?? "-"} · Sets{" "}
+                {yesterdayEntry &&
+                (yesterdayEntry.actualSetsNewBiz !== null ||
+                  yesterdayEntry.actualSetsExpansion !== null)
+                  ? (yesterdayEntry.actualSetsNewBiz ?? 0) +
+                    (yesterdayEntry.actualSetsExpansion ?? 0)
+                  : "-"}{" "}
+                · SQOs {yesterdayEntry?.actualSQOs ?? "-"}
+              </div>
+              <div>Wins: {yesterdayEntry?.wins?.trim() || "-"}</div>
+              <div>Blockers: {yesterdayEntry?.blockers?.trim() || "-"}</div>
+              <div>Notes: {yesterdayEntry?.notes?.trim() || "-"}</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

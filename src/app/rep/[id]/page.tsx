@@ -74,6 +74,8 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
   const actualSetsNewBiz = yesterdayEntry?.actualSetsNewBiz ?? "";
   const actualSetsExpansion = yesterdayEntry?.actualSetsExpansion ?? "";
   const actualSQOs = yesterdayEntry?.actualSQOs ?? "";
+  const wins = yesterdayEntry?.wins ?? "";
+  const blockers = yesterdayEntry?.blockers ?? "";
   const notes = yesterdayEntry?.notes ?? "";
 
   const goalDialsBelow = typeof goalDials === "number" && goalDials < MIN_DIALS;
@@ -320,7 +322,27 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
             </label>
 
             <label className="text-sm font-medium text-slate-700">
-              Notes (blockers / wins)
+              Wins
+              <textarea
+                name="wins"
+                defaultValue={wins}
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="text-sm font-medium text-slate-700">
+              Blockers
+              <textarea
+                name="blockers"
+                defaultValue={blockers}
+                rows={3}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="text-sm font-medium text-slate-700">
+              Notes (optional)
               <textarea
                 name="notes"
                 defaultValue={notes}

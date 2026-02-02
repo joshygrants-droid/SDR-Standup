@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { DailyEntry } from "@prisma/client";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getMonthKeys, getMonthRange } from "@/lib/date";
+import { getMonthKeys, getMonthRange, todayISO, yesterdayISO } from "@/lib/date";
 import { isManagerAuthed } from "@/lib/auth";
 import { addRep, deleteRep, managerLogin, managerLogout } from "@/app/actions";
 
@@ -42,6 +42,24 @@ function summarize(entries: DailyEntry[]) {
   }
   totals.setsTotal = totals.setsNewBiz + totals.setsExpansion;
   return totals;
+}
+
+function formatNumber(value?: number | null) {
+  return typeof value === "number" ? value : "-";
+}
+
+function formatText(value?: string | null) {
+  if (!value) return "-";
+  const trimmed = value.trim();
+  return trimmed ? trimmed : "-";
+}
+
+function formatActualSets(entry?: DailyEntry | null) {
+  if (!entry) return "-";
+  const hasActualSets =
+    entry.actualSetsNewBiz !== null || entry.actualSetsExpansion !== null;
+  if (!hasActualSets) return "-";
+  return (entry.actualSetsNewBiz ?? 0) + (entry.actualSetsExpansion ?? 0);
 }
 
 export default async function ManagerPage({
@@ -105,6 +123,9 @@ export default async function ManagerPage({
     const entries = teamEntries.filter((entry) => entry.date.startsWith(key));
     return summarize(entries);
   });
+
+  const today = todayISO();
+  const yesterday = yesterdayISO();
 
   const repError =
     searchParams?.error === "duplicate"
@@ -210,6 +231,97 @@ export default async function ManagerPage({
                   </td>
                 </tr>
               )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Today’s Plan + Yesterday’s Attainment
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Today: {today} · Yesterday: {yesterday}
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                <th className="py-2">Today’s Plan</th>
+                <th className="py-2">Yesterday’s Attainment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reps.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={3}>
+                    No SDRs found.
+                  </td>
+                </tr>
+              )}
+              {reps.map((rep) => {
+                const todayEntry = rep.entries.find((entry) => entry.date === today);
+                const yesterdayEntry = rep.entries.find(
+                  (entry) => entry.date === yesterday
+                );
+                return (
+                  <tr key={rep.id} className="border-t align-top">
+                    <td className="py-3 font-medium text-slate-700">{rep.name}</td>
+                    <td className="py-3">
+                      <div className="space-y-1 text-xs text-slate-600">
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Goals:
+                          </span>{" "}
+                          Dials {formatNumber(todayEntry?.goalDials)} ·
+                          Prospects {formatNumber(todayEntry?.goalNewProspects)} ·
+                          Sets {formatNumber(todayEntry?.goalSetsTotal)} ·
+                          SQOs {formatNumber(todayEntry?.goalSQOs)}
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Target Focus:
+                          </span>{" "}
+                          {formatText(todayEntry?.focusText)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      <div className="space-y-1 text-xs text-slate-600">
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Actuals:
+                          </span>{" "}
+                          Dials {formatNumber(yesterdayEntry?.actualDials)} ·
+                          Prospects{" "}
+                          {formatNumber(yesterdayEntry?.actualNewProspects)} ·
+                          Sets {formatActualSets(yesterdayEntry)} · SQOs{" "}
+                          {formatNumber(yesterdayEntry?.actualSQOs)}
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Wins:
+                          </span>{" "}
+                          {formatText(yesterdayEntry?.wins)}
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Blockers:
+                          </span>{" "}
+                          {formatText(yesterdayEntry?.blockers)}
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Notes:
+                          </span>{" "}
+                          {formatText(yesterdayEntry?.notes)}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
