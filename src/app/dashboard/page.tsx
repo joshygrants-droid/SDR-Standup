@@ -210,7 +210,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               <option value="dials">Dials</option>
               <option value="setsTotal">Total Sets</option>
               <option value="setsNewBiz">New Biz Sets</option>
-              <option value="setsExpansion">Expansion Sets</option>
+              <option value="setsExpansion">Upsell Sets</option>
               <option value="sqos">SQOs</option>
               <option value="prospects">New Prospects Added</option>
             </select>
@@ -230,7 +230,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
           { label: "New Prospects", value: totals.prospects },
           { label: "Total Sets", value: totals.setsTotal },
           { label: "New Biz Sets", value: totals.setsNewBiz },
-          { label: "Expansion Sets", value: totals.setsExpansion },
+          { label: "Upsell Sets", value: totals.setsExpansion },
           { label: "SQOs", value: totals.sqos },
         ].map((card) => (
           <div
@@ -260,7 +260,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               : metric === "setsNewBiz"
               ? "New Biz Sets"
               : metric === "setsExpansion"
-              ? "Expansion Sets"
+              ? "Upsell Sets"
               : metric === "sqos"
               ? "SQOs"
               : "Dials"}
@@ -304,7 +304,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                 {showDialsColumn && <th className="py-2">Dials</th>}
                 <th className="py-2">Prospects</th>
                 <th className="py-2">New Biz Sets</th>
-                <th className="py-2">Expansion Sets</th>
+                <th className="py-2">Upsell Sets</th>
                 <th className="py-2">Total Sets</th>
                 <th className="py-2">SQOs</th>
               </tr>
@@ -347,7 +347,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                 <th className="py-2">Dials</th>
                 <th className="py-2">Prospects</th>
                 <th className="py-2">New Biz Sets</th>
-                <th className="py-2">Expansion Sets</th>
+                <th className="py-2">Upsell Sets</th>
                 <th className="py-2">SQOs</th>
               </tr>
             </thead>

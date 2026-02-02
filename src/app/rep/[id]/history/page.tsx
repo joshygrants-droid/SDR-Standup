@@ -197,7 +197,7 @@ export default async function RepHistoryPage({
                 />
               </label>
               <label className="text-sm font-medium text-slate-700">
-                Goal: Expansion Sets
+                Goal: Upsell Sets
                 <input
                   name="goalSetsExpansion"
                   type="number"
@@ -274,7 +274,7 @@ export default async function RepHistoryPage({
                 />
               </label>
               <label className="text-sm font-medium text-slate-700">
-                Actual: Expansion Sets
+                Actual: Upsell Sets
                 <input
                   name="actualSetsExpansion"
                   type="number"
