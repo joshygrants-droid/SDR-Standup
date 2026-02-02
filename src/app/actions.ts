@@ -3,7 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isManagerAuthed } from "@/lib/auth";
 import { MANAGER_COOKIE } from "@/lib/constants";
 
 function parseIntField(value: FormDataEntryValue | null): number | null {
@@ -45,6 +47,58 @@ export async function managerLogout() {
   const store = await cookies();
   store.delete(MANAGER_COOKIE);
   redirect("/");
+}
+
+export async function addRep(formData: FormData) {
+  const authed = await isManagerAuthed();
+  if (!authed) {
+    redirect("/manager");
+  }
+
+  const name = String(formData.get("name") || "").trim();
+  if (!name) {
+    redirect("/manager?error=missing");
+  }
+
+  try {
+    await prisma.user.create({
+      data: { name, role: Role.SDR },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      redirect("/manager?error=duplicate");
+    }
+    throw error;
+  }
+
+  revalidatePath("/");
+  revalidatePath("/manager");
+  revalidatePath("/dashboard");
+  redirect("/manager?added=1");
+}
+
+export async function deleteRep(formData: FormData) {
+  const authed = await isManagerAuthed();
+  if (!authed) {
+    redirect("/manager");
+  }
+
+  const userId = String(formData.get("userId") || "");
+  if (!userId) {
+    redirect("/manager?error=missing");
+  }
+
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/manager");
+  revalidatePath("/dashboard");
+  redirect("/manager?deleted=1");
 }
 
 export async function saveGoals(formData: FormData) {

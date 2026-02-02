@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getMonthKeys, getMonthRange } from "@/lib/date";
 import { isManagerAuthed } from "@/lib/auth";
-import { managerLogin, managerLogout } from "@/app/actions";
+import { addRep, deleteRep, managerLogin, managerLogout } from "@/app/actions";
 
 type MetricTotals = {
   dials: number;
@@ -45,7 +45,7 @@ function summarize(entries: DailyEntry[]) {
 export default async function ManagerPage({
   searchParams,
 }: {
-  searchParams?: { error?: string };
+  searchParams?: { error?: string; added?: string; deleted?: string };
 }) {
   const authed = await isManagerAuthed();
 
@@ -104,6 +104,15 @@ export default async function ManagerPage({
     return summarize(entries);
   });
 
+  const repError =
+    searchParams?.error === "duplicate"
+      ? "That name already exists."
+      : searchParams?.error === "missing"
+        ? "Enter a name to add."
+        : "";
+  const repAdded = searchParams?.added === "1";
+  const repDeleted = searchParams?.deleted === "1";
+
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -127,6 +136,82 @@ export default async function ManagerPage({
           </button>
         </form>
       </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Add SDR</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Add a rep name to the dropdown on the homepage.
+        </p>
+        <form action={addRep} className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input
+            name="name"
+            placeholder="Rep name"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            required
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Add SDR
+          </button>
+        </form>
+        {repError && <p className="mt-2 text-sm text-rose-600">{repError}</p>}
+        {repAdded && (
+          <p className="mt-2 text-sm text-emerald-600">
+            Rep added. Refresh the homepage dropdown.
+          </p>
+        )}
+        {repDeleted && (
+          <p className="mt-2 text-sm text-emerald-600">
+            Rep deleted.
+          </p>
+        )}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Manage SDRs</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Deleting a rep removes their entries.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Name</th>
+                <th className="py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reps.map((rep) => (
+                <tr key={rep.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-700">
+                    {rep.name}
+                  </td>
+                  <td className="py-2">
+                    <form action={deleteRep}>
+                      <input type="hidden" name="userId" value={rep.id} />
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+              {reps.length === 0 && (
+                <tr>
+                  <td className="py-2 text-slate-500" colSpan={2}>
+                    No SDRs found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Team Summary</h2>
