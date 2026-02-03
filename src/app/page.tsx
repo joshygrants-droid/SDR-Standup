@@ -64,6 +64,9 @@ export default async function Home({ searchParams }: HomeProps) {
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
             required
           />
+          <p className="text-xs text-slate-500">
+            Forgot your PIN? Contact your admin to reset access.
+          </p>
           {showManagerError && (
             <p className="text-sm text-rose-600">Invalid PIN. Try again.</p>
           )}
