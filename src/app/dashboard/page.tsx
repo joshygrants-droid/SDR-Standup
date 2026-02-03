@@ -28,6 +28,17 @@ type LeaderboardRow = {
   sqos: number;
 };
 
+type GoalRow = {
+  id: string;
+  name: string;
+  goalDials: number;
+  goalProspects: number;
+  goalSetsNewBiz: number;
+  goalSetsExpansion: number;
+  goalSetsTotal: number;
+  goalSQOs: number;
+  focusText: string;
+};
 type MetricKey = Exclude<keyof LeaderboardRow, "id" | "name">;
 type SortKey = "name" | "metric";
 type SortDirection = "asc" | "desc";
@@ -158,6 +169,39 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     return { id: rep.id, name: rep.name, ...base };
   });
 
+  const goalRows: GoalRow[] = reps.map((rep) => {
+    const goals = {
+      goalDials: 0,
+      goalProspects: 0,
+      goalSetsNewBiz: 0,
+      goalSetsExpansion: 0,
+      goalSetsTotal: 0,
+      goalSQOs: 0,
+    };
+    let latestFocus = "";
+    let latestFocusDate = "";
+
+    for (const entry of rep.entries) {
+      goals.goalDials += entry.goalDials ?? 0;
+      goals.goalProspects += entry.goalNewProspects ?? 0;
+      goals.goalSetsNewBiz += entry.goalSetsNewBiz ?? 0;
+      goals.goalSetsExpansion += entry.goalSetsExpansion ?? 0;
+      goals.goalSQOs += entry.goalSQOs ?? 0;
+      goals.goalSetsTotal = goals.goalSetsNewBiz + goals.goalSetsExpansion;
+
+      if (entry.focusText && entry.date > latestFocusDate) {
+        latestFocus = entry.focusText;
+        latestFocusDate = entry.date;
+      }
+    }
+
+    return {
+      id: rep.id,
+      name: rep.name,
+      ...goals,
+      focusText: latestFocus || "—",
+    };
+  });
   const sorted = [...rows].sort((a, b) => {
     if (sort === "name") {
       return direction === "asc"
@@ -385,6 +429,58 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Goals by Rep
+          </h2>
+          <p className="text-sm text-slate-500">
+            Target focus reflects the latest focus in this range
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                <th className="py-2">Goal Dials</th>
+                <th className="py-2">Goal Prospects</th>
+                <th className="py-2">Goal New Biz Sets</th>
+                <th className="py-2">Goal Upsell Sets</th>
+                <th className="py-2">Goal Sets</th>
+                <th className="py-2">Goal SQOs</th>
+                <th className="py-2">Target Focus</th>
+              </tr>
+            </thead>
+            <tbody>
+              {goalRows.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={8}>
+                    No goals in this range yet.
+                  </td>
+                </tr>
+              )}
+              {goalRows.map((row) => (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-800">
+                    {row.name}
+                  </td>
+                  <td className="py-2">{row.goalDials}</td>
+                  <td className="py-2">{row.goalProspects}</td>
+                  <td className="py-2">{row.goalSetsNewBiz}</td>
+                  <td className="py-2">{row.goalSetsExpansion}</td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {row.goalSetsTotal}
+                  </td>
+                  <td className="py-2">{row.goalSQOs}</td>
+                  <td className="py-2 text-slate-700">{row.focusText}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
