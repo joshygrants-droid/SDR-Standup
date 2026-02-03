@@ -82,6 +82,26 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
   });
 
   const totals = withSetsTotal(sumTotals(entries));
+  const goalTotals = withSetsTotal(
+    entries.reduce(
+      (acc, entry) => {
+        acc.dials += entry.goalDials ?? 0;
+        acc.prospects += entry.goalNewProspects ?? 0;
+        acc.setsNewBiz += entry.goalSetsNewBiz ?? 0;
+        acc.setsExpansion += entry.goalSetsExpansion ?? 0;
+        acc.sqos += entry.goalSQOs ?? 0;
+        return acc;
+      },
+      {
+        dials: 0,
+        prospects: 0,
+        setsNewBiz: 0,
+        setsExpansion: 0,
+        setsTotal: 0,
+        sqos: 0,
+      },
+    ),
+  );
   const dailyMap = new Map<string, ReturnType<typeof sumTotals>>();
 
   for (const entry of entries) {
@@ -334,6 +354,37 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">Goal Totals</h2>
+          <p className="text-sm text-slate-500">
+            Team goals for {start} through {end}
+          </p>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {[
+            { label: "Goal Dials", value: goalTotals.dials },
+            { label: "Goal Prospects", value: goalTotals.prospects },
+            { label: "Goal Sets", value: goalTotals.setsTotal },
+            { label: "Goal New Biz Sets", value: goalTotals.setsNewBiz },
+            { label: "Goal Upsell Sets", value: goalTotals.setsExpansion },
+            { label: "Goal SQOs", value: goalTotals.sqos },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                {card.label}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
+                {card.value}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
