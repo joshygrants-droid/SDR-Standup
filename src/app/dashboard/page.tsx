@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getPresetRange } from "@/lib/date";
+import { getPresetRange, todayISO } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +61,93 @@ const isSortKey = (value?: string): value is SortKey =>
 const isDirection = (value?: string): value is SortDirection =>
   value === "asc" || value === "desc";
 
+function sumGoalTotals(
+  entries: Array<{
+  goalDials: number | null;
+  goalNewProspects: number | null;
+  goalSetsNewBiz: number | null;
+  goalSetsExpansion: number | null;
+  goalSQOs: number | null;
+  }>,
+): ReturnType<typeof sumTotals> {
+  return entries.reduce(
+    (acc, entry) => {
+      acc.dials += entry.goalDials ?? 0;
+      acc.prospects += entry.goalNewProspects ?? 0;
+      acc.setsNewBiz += entry.goalSetsNewBiz ?? 0;
+      acc.setsExpansion += entry.goalSetsExpansion ?? 0;
+      acc.sqos += entry.goalSQOs ?? 0;
+      return acc;
+    },
+    { dials: 0, prospects: 0, setsNewBiz: 0, setsExpansion: 0, setsTotal: 0, sqos: 0 }
+  );
+}
+
+function metricLabel(metric: MetricKey): string {
+  switch (metric) {
+    case "dials":
+      return "Dials";
+    case "prospects":
+      return "New Prospects";
+    case "setsTotal":
+      return "Total Sets";
+    case "setsNewBiz":
+      return "New Biz Sets";
+    case "setsExpansion":
+      return "Upsell Sets";
+    case "sqos":
+      return "SQOs";
+    default:
+      return "Selected Metric";
+  }
+}
+
+function goalForMetric(entry: {
+  goalDials: number | null;
+  goalNewProspects: number | null;
+  goalSetsNewBiz: number | null;
+  goalSetsExpansion: number | null;
+  goalSQOs: number | null;
+}, metric: MetricKey): number {
+  switch (metric) {
+    case "dials":
+      return entry.goalDials ?? 0;
+    case "prospects":
+      return entry.goalNewProspects ?? 0;
+    case "setsNewBiz":
+      return entry.goalSetsNewBiz ?? 0;
+    case "setsExpansion":
+      return entry.goalSetsExpansion ?? 0;
+    case "setsTotal":
+      return (entry.goalSetsNewBiz ?? 0) + (entry.goalSetsExpansion ?? 0);
+    case "sqos":
+      return entry.goalSQOs ?? 0;
+  }
+}
+
+function actualForMetric(entry: {
+  actualDials: number | null;
+  actualNewProspects: number | null;
+  actualSetsNewBiz: number | null;
+  actualSetsExpansion: number | null;
+  actualSQOs: number | null;
+}, metric: MetricKey): number {
+  switch (metric) {
+    case "dials":
+      return entry.actualDials ?? 0;
+    case "prospects":
+      return entry.actualNewProspects ?? 0;
+    case "setsNewBiz":
+      return entry.actualSetsNewBiz ?? 0;
+    case "setsExpansion":
+      return entry.actualSetsExpansion ?? 0;
+    case "setsTotal":
+      return (entry.actualSetsNewBiz ?? 0) + (entry.actualSetsExpansion ?? 0);
+    case "sqos":
+      return entry.actualSQOs ?? 0;
+  }
+}
+
 function resolveRange(searchParams?: DashboardProps["searchParams"]) {
   const range = searchParams?.range ?? "yesterday";
   if (range === "custom" && searchParams?.start && searchParams?.end) {
@@ -84,6 +171,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     ? searchParams?.direction
     : "desc";
   const baseQuery = { range, start, end, metric };
+  const today = todayISO();
 
   const entries = await prisma.dailyEntry.findMany({
     where: {
@@ -93,26 +181,10 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
   });
 
   const totals = withSetsTotal(sumTotals(entries));
-  const goalTotals = withSetsTotal(
-    entries.reduce(
-      (acc, entry) => {
-        acc.dials += entry.goalDials ?? 0;
-        acc.prospects += entry.goalNewProspects ?? 0;
-        acc.setsNewBiz += entry.goalSetsNewBiz ?? 0;
-        acc.setsExpansion += entry.goalSetsExpansion ?? 0;
-        acc.sqos += entry.goalSQOs ?? 0;
-        return acc;
-      },
-      {
-        dials: 0,
-        prospects: 0,
-        setsNewBiz: 0,
-        setsExpansion: 0,
-        setsTotal: 0,
-        sqos: 0,
-      },
-    ),
-  );
+  const todayEntries = await prisma.dailyEntry.findMany({
+    where: { date: today },
+  });
+  const goalTotals = withSetsTotal(sumGoalTotals(todayEntries));
   const dailyMap = new Map<string, ReturnType<typeof sumTotals>>();
 
   for (const entry of entries) {
@@ -169,37 +241,46 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     return { id: rep.id, name: rep.name, ...base };
   });
 
+  const todayEntryByUserId = new Map(
+    todayEntries.map((entry) => [entry.userId, entry]),
+  );
+
   const goalRows: GoalRow[] = reps.map((rep) => {
+    const todayEntry = todayEntryByUserId.get(rep.id);
     const goals = {
-      goalDials: 0,
-      goalProspects: 0,
-      goalSetsNewBiz: 0,
-      goalSetsExpansion: 0,
-      goalSetsTotal: 0,
-      goalSQOs: 0,
+      goalDials: todayEntry?.goalDials ?? 0,
+      goalProspects: todayEntry?.goalNewProspects ?? 0,
+      goalSetsNewBiz: todayEntry?.goalSetsNewBiz ?? 0,
+      goalSetsExpansion: todayEntry?.goalSetsExpansion ?? 0,
+      goalSetsTotal:
+        (todayEntry?.goalSetsNewBiz ?? 0) +
+        (todayEntry?.goalSetsExpansion ?? 0),
+      goalSQOs: todayEntry?.goalSQOs ?? 0,
     };
-    let latestFocus = "";
-    let latestFocusDate = "";
-
-    for (const entry of rep.entries) {
-      goals.goalDials += entry.goalDials ?? 0;
-      goals.goalProspects += entry.goalNewProspects ?? 0;
-      goals.goalSetsNewBiz += entry.goalSetsNewBiz ?? 0;
-      goals.goalSetsExpansion += entry.goalSetsExpansion ?? 0;
-      goals.goalSQOs += entry.goalSQOs ?? 0;
-      goals.goalSetsTotal = goals.goalSetsNewBiz + goals.goalSetsExpansion;
-
-      if (entry.focusText && entry.date > latestFocusDate) {
-        latestFocus = entry.focusText;
-        latestFocusDate = entry.date;
-      }
-    }
 
     return {
       id: rep.id,
       name: rep.name,
       ...goals,
-      focusText: latestFocus || "—",
+      focusText: todayEntry?.focusText || "—",
+    };
+  });
+
+  const goalsVsActualsRows = reps.map((rep) => {
+    let goalTotal = 0;
+    let actualTotal = 0;
+
+    for (const entry of rep.entries) {
+      goalTotal += goalForMetric(entry, metric);
+      actualTotal += actualForMetric(entry, metric);
+    }
+
+    return {
+      id: rep.id,
+      name: rep.name,
+      goalTotal,
+      actualTotal,
+      delta: actualTotal - goalTotal,
     };
   });
   const sorted = [...rows].sort((a, b) => {
@@ -403,11 +484,59 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">
+            Goals vs Actuals
+          </h2>
+          <p className="text-sm text-slate-500">
+            {metricLabel(metric)} totals for {start} through {end}
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                <th className="py-2">{metricLabel(metric)} Goal</th>
+                <th className="py-2">{metricLabel(metric)} Actual</th>
+                <th className="py-2">Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {goalsVsActualsRows.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={4}>
+                    No entries in this range yet.
+                  </td>
+                </tr>
+              )}
+              {goalsVsActualsRows.map((row) => (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-800">
+                    {row.name}
+                  </td>
+                  <td className="py-2">{row.goalTotal}</td>
+                  <td className="py-2">{row.actualTotal}</td>
+                  <td
+                    className={`py-2 font-semibold ${
+                      row.delta >= 0 ? "text-emerald-600" : "text-rose-600"
+                    }`}
+                  >
+                    {row.delta >= 0 ? "+" : ""}
+                    {row.delta}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
             Goals by Rep
           </h2>
           <p className="text-sm text-slate-500">
-            Totals shown for {start} through {end}. Target focus reflects the
-            latest focus in this range.
+            Today’s goals and target focus ({today})
           </p>
         </div>
         <div className="mt-4 overflow-x-auto">
