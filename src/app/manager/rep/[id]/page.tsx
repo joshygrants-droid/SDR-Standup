@@ -26,7 +26,7 @@ export default async function ManagerRepDetail({
         </p>
         <Link
           href="/manager"
-          className="mt-4 inline-flex rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white"
+          className="accent-button mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
         >
           Go to Manager Hub
         </Link>

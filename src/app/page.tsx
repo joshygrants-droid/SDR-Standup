@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
+            className="accent-button rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Continue
           </button>
@@ -69,7 +69,7 @@ export default async function Home({ searchParams }: HomeProps) {
           )}
           <button
             type="submit"
-            className="rounded-lg border border-[color:var(--accent)] px-3 py-2 text-sm font-semibold text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white"
+            className="accent-button-outline rounded-lg px-3 py-2 text-sm font-semibold"
           >
             Enter Manager Hub
           </button>

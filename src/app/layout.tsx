@@ -27,34 +27,25 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-[color:var(--accent-soft)] text-slate-900">
-          <header className="border-b border-[color:var(--accent-soft)] bg-white/80 backdrop-blur">
+        <div className="app-shell min-h-screen text-slate-900">
+          <header className="app-header">
             <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                   Daily Standup
                 </p>
-                <p className="text-lg font-semibold text-[color:var(--accent-strong)]">
+                <p className="accent-text text-lg font-semibold">
                   Performance Tracker
                 </p>
               </div>
-              <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
-                <a
-                  className="rounded-full px-3 py-1 transition hover:bg-white hover:text-[color:var(--accent-strong)]"
-                  href="/"
-                >
+              <nav className="accent-nav flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
+                <a href="/">
                   Home
                 </a>
-                <a
-                  className="rounded-full px-3 py-1 transition hover:bg-white hover:text-[color:var(--accent-strong)]"
-                  href="/dashboard"
-                >
+                <a href="/dashboard">
                   Dashboard
                 </a>
-                <a
-                  className="rounded-full px-3 py-1 transition hover:bg-white hover:text-[color:var(--accent-strong)]"
-                  href="/manager"
-                >
+                <a href="/manager">
                   Manager Hub
                 </a>
               </nav>

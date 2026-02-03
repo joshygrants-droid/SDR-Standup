@@ -119,7 +119,7 @@ export default async function RepHistoryPage({
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
+            className="accent-button rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Load Entry
           </button>
@@ -221,7 +221,7 @@ export default async function RepHistoryPage({
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
+            className="accent-button mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Save Goals
           </button>
@@ -329,7 +329,7 @@ export default async function RepHistoryPage({
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-lg border border-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white"
+            className="accent-button-outline mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Save Actuals
           </button>

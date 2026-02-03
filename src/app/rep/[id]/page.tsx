@@ -221,7 +221,7 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
+            className="accent-button mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Save Today’s Goals
           </button>
@@ -354,7 +354,7 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-lg border border-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white"
+            className="accent-button-outline mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Save Yesterday’s Actuals
           </button>

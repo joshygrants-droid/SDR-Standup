@@ -4,8 +4,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --accent: #1e90ff;
-  --accent-strong: #1877d3;
-  --accent-soft: #e6f2ff;
+  --accent-strong: #0f6fd1;
+  --accent-soft: #dcebff;
 }
 
 @theme inline {
@@ -26,4 +26,48 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.app-shell {
+  background: linear-gradient(135deg, #ffffff 0%, #eef6ff 45%, #dcebff 100%);
+}
+
+.app-header {
+  border-bottom: 1px solid #cfe3ff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.accent-text {
+  color: var(--accent-strong);
+}
+
+.accent-nav a {
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  transition: all 150ms ease;
+}
+
+.accent-nav a:hover {
+  background: #eaf3ff;
+  color: var(--accent-strong);
+}
+
+.accent-button {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.accent-button:hover {
+  background: var(--accent-strong);
+}
+
+.accent-button-outline {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.accent-button-outline:hover {
+  background: var(--accent);
+  color: #ffffff;
 }

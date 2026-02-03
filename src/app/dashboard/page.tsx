@@ -237,7 +237,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--accent-strong)]"
+            className="accent-button rounded-lg px-4 py-2 text-sm font-semibold"
           >
             Apply
           </button>
