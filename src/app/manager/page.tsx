@@ -71,7 +71,7 @@ function formatActualSets(entry?: DailyEntry | null) {
 export default async function ManagerPage({
   searchParams,
 }: {
-  searchParams?: { error?: string; added?: string; deleted?: string };
+  searchParams?: { error?: string; added?: string; deleted?: string; pin?: string };
 }) {
   const authed = await isManagerAuthed();
 
