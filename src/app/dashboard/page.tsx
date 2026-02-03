@@ -83,71 +83,6 @@ function sumGoalTotals(
   );
 }
 
-function metricLabel(metric: MetricKey): string {
-  switch (metric) {
-    case "dials":
-      return "Dials";
-    case "prospects":
-      return "New Prospects";
-    case "setsTotal":
-      return "Total Sets";
-    case "setsNewBiz":
-      return "New Biz Sets";
-    case "setsExpansion":
-      return "Upsell Sets";
-    case "sqos":
-      return "SQOs";
-    default:
-      return "Selected Metric";
-  }
-}
-
-function goalForMetric(entry: {
-  goalDials: number | null;
-  goalNewProspects: number | null;
-  goalSetsNewBiz: number | null;
-  goalSetsExpansion: number | null;
-  goalSQOs: number | null;
-}, metric: MetricKey): number {
-  switch (metric) {
-    case "dials":
-      return entry.goalDials ?? 0;
-    case "prospects":
-      return entry.goalNewProspects ?? 0;
-    case "setsNewBiz":
-      return entry.goalSetsNewBiz ?? 0;
-    case "setsExpansion":
-      return entry.goalSetsExpansion ?? 0;
-    case "setsTotal":
-      return (entry.goalSetsNewBiz ?? 0) + (entry.goalSetsExpansion ?? 0);
-    case "sqos":
-      return entry.goalSQOs ?? 0;
-  }
-}
-
-function actualForMetric(entry: {
-  actualDials: number | null;
-  actualNewProspects: number | null;
-  actualSetsNewBiz: number | null;
-  actualSetsExpansion: number | null;
-  actualSQOs: number | null;
-}, metric: MetricKey): number {
-  switch (metric) {
-    case "dials":
-      return entry.actualDials ?? 0;
-    case "prospects":
-      return entry.actualNewProspects ?? 0;
-    case "setsNewBiz":
-      return entry.actualSetsNewBiz ?? 0;
-    case "setsExpansion":
-      return entry.actualSetsExpansion ?? 0;
-    case "setsTotal":
-      return (entry.actualSetsNewBiz ?? 0) + (entry.actualSetsExpansion ?? 0);
-    case "sqos":
-      return entry.actualSQOs ?? 0;
-  }
-}
-
 function resolveRange(searchParams?: DashboardProps["searchParams"]) {
   const range = searchParams?.range ?? "yesterday";
   if (range === "custom" && searchParams?.start && searchParams?.end) {
@@ -267,20 +202,46 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
   });
 
   const goalsVsActualsRows = reps.map((rep) => {
-    let goalTotal = 0;
-    let actualTotal = 0;
+    let goalDials = 0;
+    let goalProspects = 0;
+    let goalSetsNewBiz = 0;
+    let goalSetsExpansion = 0;
+    let goalSQOs = 0;
+
+    let actualDials = 0;
+    let actualProspects = 0;
+    let actualSetsNewBiz = 0;
+    let actualSetsExpansion = 0;
+    let actualSQOs = 0;
 
     for (const entry of rep.entries) {
-      goalTotal += goalForMetric(entry, metric);
-      actualTotal += actualForMetric(entry, metric);
+      goalDials += entry.goalDials ?? 0;
+      goalProspects += entry.goalNewProspects ?? 0;
+      goalSetsNewBiz += entry.goalSetsNewBiz ?? 0;
+      goalSetsExpansion += entry.goalSetsExpansion ?? 0;
+      goalSQOs += entry.goalSQOs ?? 0;
+
+      actualDials += entry.actualDials ?? 0;
+      actualProspects += entry.actualNewProspects ?? 0;
+      actualSetsNewBiz += entry.actualSetsNewBiz ?? 0;
+      actualSetsExpansion += entry.actualSetsExpansion ?? 0;
+      actualSQOs += entry.actualSQOs ?? 0;
     }
+
+    const goalSetsTotal = goalSetsNewBiz + goalSetsExpansion;
+    const actualSetsTotal = actualSetsNewBiz + actualSetsExpansion;
 
     return {
       id: rep.id,
       name: rep.name,
-      goalTotal,
-      actualTotal,
-      delta: actualTotal - goalTotal,
+      goalDials,
+      goalProspects,
+      goalSetsTotal,
+      goalSQOs,
+      actualDials,
+      actualProspects,
+      actualSetsTotal,
+      actualSQOs,
     };
   });
   const sorted = [...rows].sort((a, b) => {
@@ -484,55 +445,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">
-            Goals vs Actuals
-          </h2>
-          <p className="text-sm text-slate-500">
-            {metricLabel(metric)} totals for {start} through {end}
-          </p>
-        </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
-              <tr>
-                <th className="py-2">Rep</th>
-                <th className="py-2">{metricLabel(metric)} Goal</th>
-                <th className="py-2">{metricLabel(metric)} Actual</th>
-                <th className="py-2">Delta</th>
-              </tr>
-            </thead>
-            <tbody>
-              {goalsVsActualsRows.length === 0 && (
-                <tr>
-                  <td className="py-3 text-slate-500" colSpan={4}>
-                    No entries in this range yet.
-                  </td>
-                </tr>
-              )}
-              {goalsVsActualsRows.map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="py-2 font-medium text-slate-800">
-                    {row.name}
-                  </td>
-                  <td className="py-2">{row.goalTotal}</td>
-                  <td className="py-2">{row.actualTotal}</td>
-                  <td
-                    className={`py-2 font-semibold ${
-                      row.delta >= 0 ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {row.delta >= 0 ? "+" : ""}
-                    {row.delta}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">
             Goals by Rep
           </h2>
           <p className="text-sm text-slate-500">
@@ -601,6 +513,58 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                   <td className="py-2 text-slate-500">—</td>
                 </tr>
               )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Goals vs Actuals
+          </h2>
+          <p className="text-sm text-slate-500">
+            Totals for {start} through {end}
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                <th className="py-2">Dials Goal</th>
+                <th className="py-2">Dials Actual</th>
+                <th className="py-2">Prospects Goal</th>
+                <th className="py-2">Prospects Actual</th>
+                <th className="py-2">Sets Goal</th>
+                <th className="py-2">Sets Actual</th>
+                <th className="py-2">SQOs Goal</th>
+                <th className="py-2">SQOs Actual</th>
+              </tr>
+            </thead>
+            <tbody>
+              {goalsVsActualsRows.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={9}>
+                    No entries in this range yet.
+                  </td>
+                </tr>
+              )}
+              {goalsVsActualsRows.map((row) => (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-800">
+                    {row.name}
+                  </td>
+                  <td className="py-2">{row.goalDials}</td>
+                  <td className="py-2">{row.actualDials}</td>
+                  <td className="py-2">{row.goalProspects}</td>
+                  <td className="py-2">{row.actualProspects}</td>
+                  <td className="py-2">{row.goalSetsTotal}</td>
+                  <td className="py-2">{row.actualSetsTotal}</td>
+                  <td className="py-2">{row.goalSQOs}</td>
+                  <td className="py-2">{row.actualSQOs}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
