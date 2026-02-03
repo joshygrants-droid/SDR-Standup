@@ -403,42 +403,12 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Goal Totals</h2>
-          <p className="text-sm text-slate-500">
-            Team goals for {start} through {end}
-          </p>
-        </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {[
-            { label: "Goal Dials", value: goalTotals.dials },
-            { label: "Goal Prospects", value: goalTotals.prospects },
-            { label: "Goal Sets", value: goalTotals.setsTotal },
-            { label: "Goal New Biz Sets", value: goalTotals.setsNewBiz },
-            { label: "Goal Upsell Sets", value: goalTotals.setsExpansion },
-            { label: "Goal SQOs", value: goalTotals.sqos },
-          ].map((card) => (
-            <div
-              key={card.label}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                {card.label}
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">
-                {card.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">
             Goals by Rep
           </h2>
           <p className="text-sm text-slate-500">
-            Target focus reflects the latest focus in this range
+            Totals shown for {start} through {end}. Target focus reflects the
+            latest focus in this range.
           </p>
         </div>
         <div className="mt-4 overflow-x-auto">
@@ -479,6 +449,30 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                   <td className="py-2 text-slate-700">{row.focusText}</td>
                 </tr>
               ))}
+              {goalRows.length > 0 && (
+                <tr className="border-t bg-slate-50">
+                  <td className="py-2 font-semibold text-slate-900">Team Total</td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.dials}
+                  </td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.prospects}
+                  </td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.setsNewBiz}
+                  </td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.setsExpansion}
+                  </td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.setsTotal}
+                  </td>
+                  <td className="py-2 font-semibold text-slate-900">
+                    {goalTotals.sqos}
+                  </td>
+                  <td className="py-2 text-slate-500">—</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
