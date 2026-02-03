@@ -84,6 +84,9 @@ export default async function ManagerPage({
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             required
           />
+          <p className="text-xs text-slate-500">
+            Forgot your PIN? Contact your admin to reset access.
+          </p>
           {searchParams?.error === "invalid" && (
             <p className="text-sm text-rose-600">Invalid PIN. Try again.</p>
           )}
