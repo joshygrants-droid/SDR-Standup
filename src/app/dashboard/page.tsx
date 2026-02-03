@@ -214,7 +214,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
 
   const toggleDirection = (value: string) =>
     sort === value && direction === "desc" ? "asc" : "desc";
-  const showDialsColumn = metric !== "dials";
 
   return (
     <div className="space-y-6">
@@ -350,6 +349,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     Rep
                   </Link>
                 </th>
+                <th className="py-2">Dials</th>
                 <th className="py-2">
                   <Link
                     href={{
@@ -365,7 +365,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     Selected Metric
                   </Link>
                 </th>
-                {showDialsColumn && <th className="py-2">Dials</th>}
                 <th className="py-2">Prospects</th>
                 <th className="py-2">New Biz Sets</th>
                 <th className="py-2">Upsell Sets</th>
@@ -385,10 +384,10 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                 <tr key={row.id} className="border-t">
                   <td className="py-2">{index + 1}</td>
                   <td className="py-2 font-medium text-slate-800">{row.name}</td>
+                  <td className="py-2">{row.dials}</td>
                   <td className="py-2 font-semibold text-slate-900">
                     {row[metric as keyof typeof row]}
                   </td>
-                  {showDialsColumn && <td className="py-2">{row.dials}</td>}
                   <td className="py-2">{row.prospects}</td>
                   <td className="py-2">{row.setsNewBiz}</td>
                   <td className="py-2">{row.setsExpansion}</td>
