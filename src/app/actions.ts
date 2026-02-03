@@ -3,10 +3,25 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { createHash } from "crypto";
 import { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isManagerAuthed } from "@/lib/auth";
 import { MANAGER_COOKIE } from "@/lib/constants";
+
+const MANAGER_SETTINGS_KEY = "manager";
+const PIN_REGEX = /^\d{4,12}$/;
+
+function hashPin(pin: string): string {
+  return createHash("sha256").update(pin).digest("hex");
+}
+
+async function getStoredPinHash(): Promise<string | null> {
+  const settings = await prisma.managerSettings.findUnique({
+    where: { key: MANAGER_SETTINGS_KEY },
+  });
+  return settings?.pinHash ?? null;
+}
 
 function parseIntField(value: FormDataEntryValue | null): number | null {
   if (value === null) return null;
@@ -26,10 +41,27 @@ export async function selectRep(formData: FormData) {
 }
 
 export async function managerLogin(formData: FormData) {
-  const pin = String(formData.get("pin") || "");
+  const pin = String(formData.get("pin") || "").trim();
   const expected = process.env.MANAGER_PIN || "";
+  const storedHash = await getStoredPinHash();
 
-  if (pin && expected && pin === expected) {
+  if (storedHash && pin && hashPin(pin) === storedHash) {
+    const store = await cookies();
+    store.set(MANAGER_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 12,
+    });
+    redirect("/manager");
+  }
+
+  if (!storedHash && pin && expected && pin === expected) {
+    await prisma.managerSettings.upsert({
+      where: { key: MANAGER_SETTINGS_KEY },
+      update: { pinHash: hashPin(expected) },
+      create: { key: MANAGER_SETTINGS_KEY, pinHash: hashPin(expected) },
+    });
     const store = await cookies();
     store.set(MANAGER_COOKIE, "1", {
       httpOnly: true,
@@ -47,6 +79,32 @@ export async function managerLogout() {
   const store = await cookies();
   store.delete(MANAGER_COOKIE);
   redirect("/");
+}
+
+export async function updateManagerPin(formData: FormData) {
+  const authed = await isManagerAuthed();
+  if (!authed) {
+    redirect("/manager");
+  }
+
+  const newPin = String(formData.get("newPin") || "").trim();
+  const confirmPin = String(formData.get("confirmPin") || "").trim();
+
+  if (!PIN_REGEX.test(newPin)) {
+    redirect("/manager?pin=invalid");
+  }
+
+  if (newPin !== confirmPin) {
+    redirect("/manager?pin=mismatch");
+  }
+
+  await prisma.managerSettings.upsert({
+    where: { key: MANAGER_SETTINGS_KEY },
+    update: { pinHash: hashPin(newPin) },
+    create: { key: MANAGER_SETTINGS_KEY, pinHash: hashPin(newPin) },
+  });
+
+  redirect("/manager?pin=updated");
 }
 
 export async function addRep(formData: FormData) {

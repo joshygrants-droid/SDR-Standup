@@ -4,7 +4,13 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getMonthKeys, getMonthRange, todayISO, yesterdayISO } from "@/lib/date";
 import { isManagerAuthed } from "@/lib/auth";
-import { addRep, deleteRep, managerLogin, managerLogout } from "@/app/actions";
+import {
+  addRep,
+  deleteRep,
+  managerLogin,
+  managerLogout,
+  updateManagerPin,
+} from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +144,9 @@ export default async function ManagerPage({
         : "";
   const repAdded = searchParams?.added === "1";
   const repDeleted = searchParams?.deleted === "1";
+  const pinUpdated = searchParams?.pin === "updated";
+  const pinInvalid = searchParams?.pin === "invalid";
+  const pinMismatch = searchParams?.pin === "mismatch";
 
   return (
     <div className="space-y-8">
@@ -162,6 +171,51 @@ export default async function ManagerPage({
           </button>
         </form>
       </header>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Manager PIN</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Update the PIN used to access the Manager Hub.
+        </p>
+        <form
+          action={updateManagerPin}
+          className="mt-4 flex flex-col gap-3 sm:flex-row"
+        >
+          <input
+            type="password"
+            name="newPin"
+            placeholder="New PIN (4-12 digits)"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            required
+          />
+          <input
+            type="password"
+            name="confirmPin"
+            placeholder="Confirm new PIN"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            required
+          />
+          <button
+            type="submit"
+            className="accent-button rounded-lg px-4 py-2 text-sm font-semibold"
+          >
+            Update PIN
+          </button>
+        </form>
+        {pinUpdated && (
+          <p className="mt-2 text-sm text-emerald-600">PIN updated.</p>
+        )}
+        {pinInvalid && (
+          <p className="mt-2 text-sm text-rose-600">
+            PIN must be 4-12 digits.
+          </p>
+        )}
+        {pinMismatch && (
+          <p className="mt-2 text-sm text-rose-600">
+            PINs do not match. Try again.
+          </p>
+        )}
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Add SDR</h2>
