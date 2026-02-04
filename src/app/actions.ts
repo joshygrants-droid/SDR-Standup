@@ -72,6 +72,27 @@ export async function managerLogin(formData: FormData) {
     redirect("/manager");
   }
 
+  if (!storedHash && pin && !expected) {
+    if (!PIN_REGEX.test(pin)) {
+      redirect("/manager?error=invalid");
+    }
+
+    await prisma.managerSettings.upsert({
+      where: { key: MANAGER_SETTINGS_KEY },
+      update: { pinHash: hashPin(pin) },
+      create: { key: MANAGER_SETTINGS_KEY, pinHash: hashPin(pin) },
+    });
+
+    const store = await cookies();
+    store.set(MANAGER_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 12,
+    });
+    redirect("/manager");
+  }
+
   redirect("/manager?error=invalid");
 }
 
