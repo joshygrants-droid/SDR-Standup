@@ -84,13 +84,22 @@ function sumGoalTotals(
 }
 
 function resolveRange(searchParams?: DashboardProps["searchParams"]) {
-  const range = searchParams?.range ?? "yesterday";
-  if (range === "custom" && searchParams?.start && searchParams?.end) {
-    const start = searchParams.start;
-    const end = searchParams.end;
-    return { range, start, end };
+  const range = searchParams?.range ?? "week";
+  const hasCustomDates = !!(searchParams?.start && searchParams?.end);
+
+  if (range === "custom" && hasCustomDates) {
+    return { range, start: searchParams!.start!, end: searchParams!.end! };
   }
+
   const preset = getPresetRange(range);
+
+  if (
+    hasCustomDates &&
+    (searchParams!.start !== preset.start || searchParams!.end !== preset.end)
+  ) {
+    return { range: "custom", start: searchParams!.start!, end: searchParams!.end! };
+  }
+
   return { range, start: preset.start, end: preset.end };
 }
 
