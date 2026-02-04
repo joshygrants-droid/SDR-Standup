@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { MIN_DIALS, MIN_NEW_PROSPECTS } from "@/lib/constants";
 import { todayISO, yesterdayISO } from "@/lib/date";
-import { saveActuals, saveGoals } from "@/app/actions";
+import { saveStandup } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -108,21 +108,25 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
       </header>
       {saved && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          {saved === "goals"
-            ? "Today’s goals saved successfully."
-            : "Yesterday’s actuals saved successfully."}
+          {saved === "standup"
+            ? "Standup saved successfully."
+            : saved === "goals"
+              ? "Today’s goals saved successfully."
+              : "Yesterday’s actuals saved successfully."}
         </div>
       )}
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <form
-          action={saveGoals}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <input type="hidden" name="userId" value={user.id} />
-          <input type="hidden" name="date" value={today} />
-          <input type="hidden" name="redirectTo" value={`/rep/${user.id}`} />
+      <form
+        action={saveStandup}
+        className="space-y-6"
+      >
+        <input type="hidden" name="userId" value={user.id} />
+        <input type="hidden" name="todayDate" value={today} />
+        <input type="hidden" name="yesterdayDate" value={yesterday} />
+        <input type="hidden" name="redirectTo" value={`/rep/${user.id}`} />
 
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900">Today’s Plan</h2>
           <p className="mt-1 text-sm text-slate-600">
             Minimum standards: {MIN_DIALS} dials, {MIN_NEW_PROSPECTS} new
@@ -218,148 +222,137 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
               />
             </label>
           </div>
+          </div>
 
-          <button
-            type="submit"
-            className="accent-button mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
-          >
-            Save Today’s Goals
-          </button>
-        </form>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Yesterday’s Attainment
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Capture actuals from {yesterday}.
+            </p>
 
-        <form
-          action={saveActuals}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <input type="hidden" name="userId" value={user.id} />
-          <input type="hidden" name="date" value={yesterday} />
-          <input type="hidden" name="redirectTo" value={`/rep/${user.id}`} />
-
-          <h2 className="text-lg font-semibold text-slate-900">
-            Yesterday’s Attainment
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Capture actuals from {yesterday}.
-          </p>
-
-          <div className="mt-4 grid gap-4">
-            <label className="text-sm font-medium text-slate-700">
-              Actual: Dials
-              <input
-                name="actualDials"
-                type="number"
-                min="0"
-                defaultValue={actualDials}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-              {typeof actualDials === "number" && (
-                <span
-                  className={`mt-1 block text-xs ${
-                    metDials ? "text-emerald-600" : "text-rose-600"
-                  }`}
-                >
-                  {metDials
-                    ? "Met minimum."
-                    : "Below minimum. You can still save."}
-                </span>
-              )}
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Actual: New Prospects Added to Sequences
-              <input
-                name="actualNewProspects"
-                type="number"
-                min="0"
-                defaultValue={actualProspects}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-              {typeof actualProspects === "number" && (
-                <span
-                  className={`mt-1 block text-xs ${
-                    metProspects ? "text-emerald-600" : "text-rose-600"
-                  }`}
-                >
-                  {metProspects
-                    ? "Met minimum."
-                    : "Below minimum. You can still save."}
-                </span>
-              )}
-            </label>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-4">
               <label className="text-sm font-medium text-slate-700">
-                Actual: New Biz Sets
+                Actual: Dials
                 <input
-                  name="actualSetsNewBiz"
+                  name="actualDials"
                   type="number"
                   min="0"
-                  defaultValue={actualSetsNewBiz}
+                  defaultValue={actualDials}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                {typeof actualDials === "number" && (
+                  <span
+                    className={`mt-1 block text-xs ${
+                      metDials ? "text-emerald-600" : "text-rose-600"
+                    }`}
+                  >
+                    {metDials
+                      ? "Met minimum."
+                      : "Below minimum. You can still save."}
+                  </span>
+                )}
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Actual: New Prospects Added to Sequences
+                <input
+                  name="actualNewProspects"
+                  type="number"
+                  min="0"
+                  defaultValue={actualProspects}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                {typeof actualProspects === "number" && (
+                  <span
+                    className={`mt-1 block text-xs ${
+                      metProspects ? "text-emerald-600" : "text-rose-600"
+                    }`}
+                  >
+                    {metProspects
+                      ? "Met minimum."
+                      : "Below minimum. You can still save."}
+                  </span>
+                )}
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Actual: New Biz Sets
+                  <input
+                    name="actualSetsNewBiz"
+                    type="number"
+                    min="0"
+                    defaultValue={actualSetsNewBiz}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Actual: Upsell Sets
+                  <input
+                    name="actualSetsExpansion"
+                    type="number"
+                    min="0"
+                    defaultValue={actualSetsExpansion}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+
+              <label className="text-sm font-medium text-slate-700">
+                Actual: SQOs
+                <input
+                  name="actualSQOs"
+                  type="number"
+                  min="0"
+                  defaultValue={actualSQOs}
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </label>
+
               <label className="text-sm font-medium text-slate-700">
-                Actual: Upsell Sets
-                <input
-                  name="actualSetsExpansion"
-                  type="number"
-                  min="0"
-                  defaultValue={actualSetsExpansion}
+                Wins
+                <textarea
+                  name="wins"
+                  defaultValue={wins}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Blockers
+                <textarea
+                  name="blockers"
+                  defaultValue={blockers}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Notes (optional)
+                <textarea
+                  name="notes"
+                  defaultValue={notes}
+                  rows={4}
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </label>
             </div>
-
-            <label className="text-sm font-medium text-slate-700">
-              Actual: SQOs
-              <input
-                name="actualSQOs"
-                type="number"
-                min="0"
-                defaultValue={actualSQOs}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Wins
-              <textarea
-                name="wins"
-                defaultValue={wins}
-                rows={3}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Blockers
-              <textarea
-                name="blockers"
-                defaultValue={blockers}
-                rows={3}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Notes (optional)
-              <textarea
-                name="notes"
-                defaultValue={notes}
-                rows={4}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-            </label>
           </div>
+        </section>
 
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <button
             type="submit"
-            className="accent-button-outline mt-5 w-full rounded-lg px-4 py-2 text-sm font-semibold"
+            className="accent-button w-full rounded-lg px-4 py-2 text-sm font-semibold"
           >
-            Save Yesterday’s Actuals
+            Save Standup
           </button>
-        </form>
-      </section>
+        </div>
+      </form>
     </div>
   );
 }

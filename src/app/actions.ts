@@ -225,3 +225,58 @@ export async function saveActuals(formData: FormData) {
     redirect(`${redirectTo}?saved=actuals`);
   }
 }
+
+export async function saveStandup(formData: FormData) {
+  const userId = String(formData.get("userId") || "");
+  const todayDate = String(formData.get("todayDate") || "");
+  const yesterdayDate = String(formData.get("yesterdayDate") || "");
+  const redirectTo = String(formData.get("redirectTo") || "");
+
+  if (!userId || !todayDate || !yesterdayDate) return;
+
+  const goalsData = {
+    goalDials: parseIntField(formData.get("goalDials")),
+    goalNewProspects: parseIntField(formData.get("goalNewProspects")),
+    goalSetsTotal: parseIntField(formData.get("goalSetsTotal")),
+    goalSetsNewBiz: parseIntField(formData.get("goalSetsNewBiz")),
+    goalSetsExpansion: parseIntField(formData.get("goalSetsExpansion")),
+    goalSQOs: parseIntField(formData.get("goalSQOs")),
+    focusText: String(formData.get("focusText") || "").trim() || null,
+  };
+
+  const actualsData = {
+    actualDials: parseIntField(formData.get("actualDials")),
+    actualNewProspects: parseIntField(formData.get("actualNewProspects")),
+    actualSetsNewBiz: parseIntField(formData.get("actualSetsNewBiz")),
+    actualSetsExpansion: parseIntField(formData.get("actualSetsExpansion")),
+    actualSQOs: parseIntField(formData.get("actualSQOs")),
+    wins: String(formData.get("wins") || "").trim() || null,
+    blockers: String(formData.get("blockers") || "").trim() || null,
+    notes: String(formData.get("notes") || "").trim() || null,
+  };
+
+  await prisma.dailyEntry.upsert({
+    where: { userId_date: { userId, date: todayDate } },
+    update: goalsData,
+    create: {
+      userId,
+      date: todayDate,
+      ...goalsData,
+    },
+  });
+
+  await prisma.dailyEntry.upsert({
+    where: { userId_date: { userId, date: yesterdayDate } },
+    update: actualsData,
+    create: {
+      userId,
+      date: yesterdayDate,
+      ...actualsData,
+    },
+  });
+
+  revalidatePath(`/rep/${userId}`);
+  if (redirectTo) {
+    redirect(`${redirectTo}?saved=standup`);
+  }
+}
