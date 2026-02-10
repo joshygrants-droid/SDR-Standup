@@ -3,18 +3,21 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPresetRange, todayISO } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
+import RangeForm from "@/app/dashboard/RangeForm";
 
 export const dynamic = "force-dynamic";
 
+type SearchParams = {
+  range?: string;
+  start?: string;
+  end?: string;
+  metric?: string;
+  sort?: string;
+  direction?: string;
+};
+
 type DashboardProps = {
-  searchParams?: {
-    range?: string;
-    start?: string;
-    end?: string;
-    metric?: string;
-    sort?: string;
-    direction?: string;
-  };
+  searchParams?: Promise<SearchParams>;
 };
 
 type LeaderboardRow = {
@@ -83,7 +86,7 @@ function sumGoalTotals(
   );
 }
 
-function resolveRange(searchParams?: DashboardProps["searchParams"]) {
+function resolveRange(searchParams?: SearchParams) {
   const range = searchParams?.range ?? "week";
   const hasCustomDates = !!(searchParams?.start && searchParams?.end);
 
@@ -104,15 +107,16 @@ function resolveRange(searchParams?: DashboardProps["searchParams"]) {
 }
 
 export default async function DashboardPage({ searchParams }: DashboardProps) {
-  const { range, start, end } = resolveRange(searchParams);
-  const metric: MetricKey = isMetricKey(searchParams?.metric)
-    ? searchParams?.metric
+  const params = searchParams ? await searchParams : {};
+  const { range, start, end } = resolveRange(params);
+  const metric: MetricKey = isMetricKey(params?.metric)
+    ? params?.metric
     : "dials";
-  const sort: SortKey = isSortKey(searchParams?.sort)
-    ? searchParams?.sort
+  const sort: SortKey = isSortKey(params?.sort)
+    ? params?.sort
     : "metric";
-  const direction: SortDirection = isDirection(searchParams?.direction)
-    ? searchParams?.direction
+  const direction: SortDirection = isDirection(params?.direction)
+    ? params?.direction
     : "desc";
   const baseQuery = { range, start, end, metric };
   const today = todayISO();
@@ -281,61 +285,13 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form className="flex flex-wrap items-end gap-3" method="get">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Range
-            <select
-              name="range"
-              defaultValue={range}
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="yesterday">Yesterday</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="custom">Custom</option>
-            </select>
-          </label>
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Start
-            <input
-              type="date"
-              name="start"
-              defaultValue={start}
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            End
-            <input
-              type="date"
-              name="end"
-              defaultValue={end}
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Leaderboard Metric
-            <select
-              name="metric"
-              defaultValue={metric}
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="dials">Dials</option>
-              <option value="setsTotal">Total Sets</option>
-              <option value="setsNewBiz">New Biz Sets</option>
-              <option value="setsExpansion">Upsell Sets</option>
-              <option value="sqos">SQOs</option>
-              <option value="prospects">New Prospects Added</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="accent-button rounded-lg px-4 py-2 text-sm font-semibold"
-          >
-            Apply
-          </button>
-        </form>
+        <RangeForm
+          key={`${range}-${start}-${end}-${metric}`}
+          range={range}
+          start={start}
+          end={end}
+          metric={metric}
+        />
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">

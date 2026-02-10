@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -39,15 +40,15 @@ export default function RootLayout({
                 </p>
               </div>
               <nav className="accent-nav flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
-                <a href="/">
+                <Link href="/">
                   Home
-                </a>
-                <a href="/dashboard">
+                </Link>
+                <Link href="/dashboard">
                   Dashboard
-                </a>
-                <a href="/manager">
+                </Link>
+                <Link href="/manager">
                   Manager Hub
-                </a>
+                </Link>
               </nav>
             </div>
           </header>

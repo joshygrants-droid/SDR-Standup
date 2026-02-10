@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && next build",
+    "build:local": "next build",
+    "dryrun": "npm run lint && npx tsc --noEmit && npm run build:local",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
