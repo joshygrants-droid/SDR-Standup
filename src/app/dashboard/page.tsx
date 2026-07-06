@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getPresetRange, todayISO } from "@/lib/date";
+import { getPresetRange, todayISO, yesterdayISO } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
+import { CHECKLIST_ITEMS } from "@/lib/constants";
 import RangeForm from "@/app/dashboard/RangeForm";
 
 export const dynamic = "force-dynamic";
@@ -257,6 +258,47 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       actualSQOs,
     };
   });
+  const yesterday = yesterdayISO();
+  const yesterdayEntries = await prisma.dailyEntry.findMany({
+    where: { date: yesterday },
+  });
+  const yesterdayByUserId = new Map(
+    yesterdayEntries.map((entry) => [entry.userId, entry]),
+  );
+
+  // Yesterday's per-rep completion of each checklist item.
+  const checklistYesterdayRows = reps.map((rep) => {
+    const entry = yesterdayByUserId.get(rep.id);
+    const items = CHECKLIST_ITEMS.map((item) => ({
+      key: item.key,
+      done: Boolean(entry?.[item.key as keyof typeof entry]),
+    }));
+    return {
+      id: rep.id,
+      name: rep.name,
+      logged: Boolean(entry),
+      items,
+      completed: items.filter((i) => i.done).length,
+      total: CHECKLIST_ITEMS.length,
+    };
+  });
+
+  // Completion rate across the selected range (days completed / days logged).
+  const checklistRangeRows = reps.map((rep) => {
+    const daysLogged = rep.entries.length;
+    const perItem = CHECKLIST_ITEMS.map((item) => ({
+      key: item.key,
+      count: rep.entries.filter((e) => Boolean(e[item.key as keyof typeof e]))
+        .length,
+    }));
+    const totalChecks = perItem.reduce((acc, i) => acc + i.count, 0);
+    const rate =
+      daysLogged > 0
+        ? Math.round((totalChecks / (daysLogged * CHECKLIST_ITEMS.length)) * 100)
+        : 0;
+    return { id: rep.id, name: rep.name, daysLogged, perItem, rate };
+  });
+
   const sorted = [...rows].sort((a, b) => {
     if (sort === "name") {
       return direction === "asc"
@@ -315,6 +357,148 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
             </p>
           </div>
         ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Daily Activity Checklist
+          </h2>
+          <p className="text-sm text-slate-500">
+            Completed yesterday ({yesterday})
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                {CHECKLIST_ITEMS.map((item) => (
+                  <th key={item.key} className="py-2 text-center">
+                    {item.short}
+                  </th>
+                ))}
+                <th className="py-2 text-center">Done</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checklistYesterdayRows.length === 0 && (
+                <tr>
+                  <td
+                    className="py-3 text-slate-500"
+                    colSpan={CHECKLIST_ITEMS.length + 2}
+                  >
+                    No reps yet.
+                  </td>
+                </tr>
+              )}
+              {checklistYesterdayRows.map((row) => (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-800">
+                    {row.name}
+                    {!row.logged && (
+                      <span className="ml-2 text-xs font-normal text-slate-400">
+                        (no entry)
+                      </span>
+                    )}
+                  </td>
+                  {row.items.map((item) => (
+                    <td key={item.key} className="py-2 text-center">
+                      {item.done ? (
+                        <span className="text-emerald-600" aria-label="done">
+                          ✓
+                        </span>
+                      ) : (
+                        <span className="text-rose-500" aria-label="not done">
+                          ✗
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                  <td
+                    className={`py-2 text-center font-semibold ${
+                      row.completed === row.total
+                        ? "text-emerald-600"
+                        : "text-slate-700"
+                    }`}
+                  >
+                    {row.completed}/{row.total}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-slate-400">
+          {CHECKLIST_ITEMS.map((item) => `${item.short}: ${item.label}`).join(
+            " · ",
+          )}
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Checklist Completion Rate
+          </h2>
+          <p className="text-sm text-slate-500">
+            Days completed / days logged ({start} through {end})
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">Rep</th>
+                <th className="py-2 text-center">Days Logged</th>
+                {CHECKLIST_ITEMS.map((item) => (
+                  <th key={item.key} className="py-2 text-center">
+                    {item.short}
+                  </th>
+                ))}
+                <th className="py-2 text-center">Overall</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checklistRangeRows.length === 0 && (
+                <tr>
+                  <td
+                    className="py-3 text-slate-500"
+                    colSpan={CHECKLIST_ITEMS.length + 3}
+                  >
+                    No entries in this range yet.
+                  </td>
+                </tr>
+              )}
+              {checklistRangeRows.map((row) => (
+                <tr key={row.id} className="border-t">
+                  <td className="py-2 font-medium text-slate-800">
+                    {row.name}
+                  </td>
+                  <td className="py-2 text-center text-slate-600">
+                    {row.daysLogged}
+                  </td>
+                  {row.perItem.map((item) => (
+                    <td key={item.key} className="py-2 text-center">
+                      {item.count}/{row.daysLogged}
+                    </td>
+                  ))}
+                  <td
+                    className={`py-2 text-center font-semibold ${
+                      row.rate >= 100
+                        ? "text-emerald-600"
+                        : row.rate >= 75
+                          ? "text-slate-700"
+                          : "text-amber-600"
+                    }`}
+                  >
+                    {row.rate}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -7,7 +7,7 @@ import { createHash } from "crypto";
 import { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isManagerAuthed } from "@/lib/auth";
-import { MANAGER_COOKIE } from "@/lib/constants";
+import { MANAGER_COOKIE, CHECKLIST_ITEMS } from "@/lib/constants";
 
 const MANAGER_SETTINGS_KEY = "manager";
 const PIN_REGEX = /^\d{4,12}$/;
@@ -30,6 +30,15 @@ function parseIntField(value: FormDataEntryValue | null): number | null {
   const number = Number(trimmed);
   if (!Number.isFinite(number) || number < 0) return null;
   return Math.floor(number);
+}
+
+// Unchecked HTML checkboxes are omitted from FormData, so presence = checked.
+function checklistData(formData: FormData): Record<string, boolean> {
+  const data: Record<string, boolean> = {};
+  for (const item of CHECKLIST_ITEMS) {
+    data[item.key] = formData.get(item.key) != null;
+  }
+  return data;
 }
 
 export async function selectRep(formData: FormData) {
@@ -229,6 +238,7 @@ export async function saveActuals(formData: FormData) {
     wins: String(formData.get("wins") || "").trim() || null,
     blockers: String(formData.get("blockers") || "").trim() || null,
     notes: String(formData.get("notes") || "").trim() || null,
+    ...checklistData(formData),
   };
 
   await prisma.dailyEntry.upsert({
@@ -274,6 +284,7 @@ export async function saveStandup(formData: FormData) {
     wins: String(formData.get("wins") || "").trim() || null,
     blockers: String(formData.get("blockers") || "").trim() || null,
     notes: String(formData.get("notes") || "").trim() || null,
+    ...checklistData(formData),
   };
 
   await prisma.dailyEntry.upsert({

@@ -41,6 +41,10 @@ model DailyEntry {
   wins                   String?
   blockers               String?
   notes                  String?
+  checkT2Leads           Boolean  @default(false)
+  checkRecycledLeads     Boolean  @default(false)
+  checkStateRestaurant   Boolean  @default(false)
+  checkNetNewBrand       Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

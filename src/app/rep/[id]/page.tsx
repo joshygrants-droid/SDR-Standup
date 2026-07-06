@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { MIN_DIALS, MIN_NEW_PROSPECTS } from "@/lib/constants";
+import { MIN_DIALS, MIN_NEW_PROSPECTS, CHECKLIST_ITEMS } from "@/lib/constants";
 import { todayISO, yesterdayISO } from "@/lib/date";
 import { saveStandup } from "@/app/actions";
 
@@ -340,6 +340,34 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </label>
+
+              <fieldset className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <legend className="px-1 text-sm font-semibold text-slate-800">
+                  Daily Activity Checklist
+                </legend>
+                <p className="mt-1 text-xs text-slate-500">
+                  Confirm you completed each of these on {yesterday}.
+                </p>
+                <div className="mt-3 grid gap-3">
+                  {CHECKLIST_ITEMS.map((item) => (
+                    <label
+                      key={item.key}
+                      className="flex items-start gap-3 text-sm text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        name={item.key}
+                        value="1"
+                        defaultChecked={Boolean(
+                          yesterdayEntry?.[item.key as keyof typeof yesterdayEntry],
+                        )}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300"
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
           </div>
         </section>
