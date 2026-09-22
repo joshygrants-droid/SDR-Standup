@@ -81,30 +81,33 @@ function GoalActualCell({ goal, actual }: { goal: number; actual: number }) {
 
   if (!hasGoal) {
     return (
-      <td className="py-2.5 pr-6 text-right tabular-nums whitespace-nowrap">
-        <span className="text-slate-400">{actual}</span>
+      <td className="py-3 pr-6 text-right tabular-nums whitespace-nowrap text-slate-300">
+        {actual}
       </td>
     );
   }
 
   return (
-    <td className="py-2.5 pr-6 text-right tabular-nums whitespace-nowrap">
-      <span className="inline-flex items-center justify-end gap-1.5">
-        <span className="text-slate-400">{goal}</span>
-        <span className="text-slate-300">→</span>
-        <span className="font-semibold text-slate-900">{actual}</span>
+    <td className="py-3 pr-6 text-right tabular-nums whitespace-nowrap">
+      <span className="inline-flex items-baseline justify-end gap-1.5">
+        <span className="text-xs text-slate-400">{goal}</span>
+        <span className="text-xs text-slate-300">→</span>
+        <span
+          className={`text-sm font-semibold ${
+            met ? "text-emerald-700" : "text-rose-600"
+          }`}
+        >
+          {actual}
+        </span>
         {met ? (
           <span
-            className="text-base leading-none text-emerald-600"
+            className="text-emerald-600"
             aria-label="hit or exceeded goal"
           >
             ✓
           </span>
         ) : (
-          <span
-            className="text-base leading-none text-rose-500"
-            aria-label="missed goal"
-          >
+          <span className="text-rose-500" aria-label="missed goal">
             ✗
           </span>
         )}
@@ -700,7 +703,9 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                 <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
                 <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
                 <th className="py-2 pr-6 text-right font-medium">SQOs</th>
-                <th className="py-2 font-medium">Target Focus</th>
+                <th className="border-l border-slate-100 py-2 pl-6 font-medium">
+                  Target Focus
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -713,20 +718,26 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               )}
               {goalRows.map((row) =>
                 row.date === null ? (
-                  <tr key={row.id} className="border-b border-slate-100">
-                    <td className="py-2.5 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
                       {row.name}
                     </td>
-                    <td className="py-2.5 text-slate-400" colSpan={8}>
+                    <td className="py-3 text-slate-400" colSpan={8}>
                       No logged day yet
                     </td>
                   </tr>
                 ) : (
-                  <tr key={row.id} className="border-b border-slate-100">
-                    <td className="py-2.5 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
                       {row.name}
                     </td>
-                    <td className="py-2.5 pr-6 text-slate-500 tabular-nums whitespace-nowrap">
+                    <td className="py-3 pr-6 text-slate-500 tabular-nums whitespace-nowrap">
                       {row.date}
                     </td>
                     <GoalActualCell goal={row.goalDials} actual={row.actualDials} />
@@ -747,18 +758,18 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                       actual={row.actualSetsTotal}
                     />
                     <GoalActualCell goal={row.goalSQOs} actual={row.actualSQOs} />
-                    <td className="max-w-xs py-2.5 align-top text-slate-600">
+                    <td className="max-w-xs border-l border-slate-100 py-3 pl-6 align-top text-slate-600">
                       {row.focusText}
                     </td>
                   </tr>
                 ),
               )}
               {goalRowsWithEntry.length > 0 && (
-                <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td className="py-2.5 pr-6 font-semibold text-slate-900 whitespace-nowrap">
+                <tr className="border-t-2 border-slate-200 bg-slate-100">
+                  <td className="py-3 pr-6 font-semibold text-slate-900 whitespace-nowrap">
                     Team Total
                   </td>
-                  <td className="py-2.5 pr-6 text-xs text-slate-400 whitespace-nowrap">
+                  <td className="py-3 pr-6 text-xs text-slate-400 whitespace-nowrap">
                     latest per rep
                   </td>
                   <GoalActualCell
@@ -785,7 +796,9 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     goal={goalRowTotals.goalSQOs}
                     actual={goalRowTotals.actualSQOs}
                   />
-                  <td className="py-2.5 text-slate-400">—</td>
+                  <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
+                    —
+                  </td>
                 </tr>
               )}
             </tbody>
