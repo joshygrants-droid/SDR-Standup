@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getPresetRange, todayISO, yesterdayISO } from "@/lib/date";
+import { getPresetRange, yesterdayISO } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
 import { CHECKLIST_ITEMS } from "@/lib/constants";
 import RangeForm from "@/app/dashboard/RangeForm";
@@ -35,12 +35,19 @@ type LeaderboardRow = {
 type GoalRow = {
   id: string;
   name: string;
+  date: string | null;
   goalDials: number;
   goalProspects: number;
   goalSetsNewBiz: number;
   goalSetsExpansion: number;
   goalSetsTotal: number;
   goalSQOs: number;
+  actualDials: number;
+  actualProspects: number;
+  actualSetsNewBiz: number;
+  actualSetsExpansion: number;
+  actualSetsTotal: number;
+  actualSQOs: number;
   focusText: string;
 };
 type MetricKey = Exclude<keyof LeaderboardRow, "id" | "name">;
@@ -65,25 +72,38 @@ const isSortKey = (value?: string): value is SortKey =>
 const isDirection = (value?: string): value is SortDirection =>
   value === "asc" || value === "desc";
 
-function sumGoalTotals(
-  entries: Array<{
-  goalDials: number | null;
-  goalNewProspects: number | null;
-  goalSetsNewBiz: number | null;
-  goalSetsExpansion: number | null;
-  goalSQOs: number | null;
-  }>,
-): ReturnType<typeof sumTotals> {
-  return entries.reduce(
-    (acc, entry) => {
-      acc.dials += entry.goalDials ?? 0;
-      acc.prospects += entry.goalNewProspects ?? 0;
-      acc.setsNewBiz += entry.goalSetsNewBiz ?? 0;
-      acc.setsExpansion += entry.goalSetsExpansion ?? 0;
-      acc.sqos += entry.goalSQOs ?? 0;
-      return acc;
-    },
-    { dials: 0, prospects: 0, setsNewBiz: 0, setsExpansion: 0, setsTotal: 0, sqos: 0 }
+// Renders a "goal → actual" cell with a hit/miss indicator. Green ✓ when the
+// actual met or exceeded the goal, red ✗ when it fell short. When no goal was
+// set for the metric, we can't judge hit/miss, so just show the actual.
+function GoalActualCell({ goal, actual }: { goal: number; actual: number }) {
+  const hasGoal = goal > 0;
+  const met = actual >= goal;
+
+  if (!hasGoal) {
+    return (
+      <td className="py-2">
+        <span className="text-slate-400">{actual}</span>
+      </td>
+    );
+  }
+
+  return (
+    <td className="py-2">
+      <span className="inline-flex items-center gap-1">
+        <span className="text-slate-500">{goal}</span>
+        <span className="text-slate-300">→</span>
+        <span className="font-semibold text-slate-900">{actual}</span>
+        {met ? (
+          <span className="text-emerald-600" aria-label="hit or exceeded goal">
+            ✓
+          </span>
+        ) : (
+          <span className="text-rose-500" aria-label="missed goal">
+            ✗
+          </span>
+        )}
+      </span>
+    </td>
   );
 }
 
@@ -120,7 +140,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     ? params?.direction
     : "desc";
   const baseQuery = { range, start, end, metric };
-  const today = todayISO();
 
   const entries = await prisma.dailyEntry.findMany({
     where: {
@@ -130,10 +149,32 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
   });
 
   const totals = withSetsTotal(sumTotals(entries));
-  const todayEntries = await prisma.dailyEntry.findMany({
-    where: { date: today },
+
+  // Each rep's most recent day that has actuals logged. Goals for a day are
+  // entered that morning; actuals are entered the next morning, so the latest
+  // day with actuals is where a real goal-vs-actual comparison exists.
+  const entriesWithActuals = await prisma.dailyEntry.findMany({
+    where: {
+      OR: [
+        { actualDials: { not: null } },
+        { actualNewProspects: { not: null } },
+        { actualSetsNewBiz: { not: null } },
+        { actualSetsExpansion: { not: null } },
+        { actualSQOs: { not: null } },
+      ],
+    },
+    orderBy: { date: "desc" },
   });
-  const goalTotals = withSetsTotal(sumGoalTotals(todayEntries));
+  const latestActualByUserId = new Map<
+    string,
+    (typeof entriesWithActuals)[number]
+  >();
+  for (const entry of entriesWithActuals) {
+    if (!latestActualByUserId.has(entry.userId)) {
+      latestActualByUserId.set(entry.userId, entry);
+    }
+  }
+
   const dailyMap = new Map<string, ReturnType<typeof sumTotals>>();
 
   for (const entry of entries) {
@@ -190,30 +231,66 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     return { id: rep.id, name: rep.name, ...base };
   });
 
-  const todayEntryByUserId = new Map(
-    todayEntries.map((entry) => [entry.userId, entry]),
-  );
-
   const goalRows: GoalRow[] = reps.map((rep) => {
-    const todayEntry = todayEntryByUserId.get(rep.id);
-    const goals = {
-      goalDials: todayEntry?.goalDials ?? 0,
-      goalProspects: todayEntry?.goalNewProspects ?? 0,
-      goalSetsNewBiz: todayEntry?.goalSetsNewBiz ?? 0,
-      goalSetsExpansion: todayEntry?.goalSetsExpansion ?? 0,
-      goalSetsTotal:
-        (todayEntry?.goalSetsNewBiz ?? 0) +
-        (todayEntry?.goalSetsExpansion ?? 0),
-      goalSQOs: todayEntry?.goalSQOs ?? 0,
-    };
+    const entry = latestActualByUserId.get(rep.id);
+    const goalSetsNewBiz = entry?.goalSetsNewBiz ?? 0;
+    const goalSetsExpansion = entry?.goalSetsExpansion ?? 0;
+    const actualSetsNewBiz = entry?.actualSetsNewBiz ?? 0;
+    const actualSetsExpansion = entry?.actualSetsExpansion ?? 0;
 
     return {
       id: rep.id,
       name: rep.name,
-      ...goals,
-      focusText: todayEntry?.focusText || "—",
+      date: entry?.date ?? null,
+      goalDials: entry?.goalDials ?? 0,
+      goalProspects: entry?.goalNewProspects ?? 0,
+      goalSetsNewBiz,
+      goalSetsExpansion,
+      goalSetsTotal: goalSetsNewBiz + goalSetsExpansion,
+      goalSQOs: entry?.goalSQOs ?? 0,
+      actualDials: entry?.actualDials ?? 0,
+      actualProspects: entry?.actualNewProspects ?? 0,
+      actualSetsNewBiz,
+      actualSetsExpansion,
+      actualSetsTotal: actualSetsNewBiz + actualSetsExpansion,
+      actualSQOs: entry?.actualSQOs ?? 0,
+      focusText: entry?.focusText || "—",
     };
   });
+
+  // Team totals across each rep's latest completed day (rows that have one).
+  const goalRowsWithEntry = goalRows.filter((row) => row.date !== null);
+  const goalRowTotals = goalRowsWithEntry.reduce(
+    (acc, row) => {
+      acc.goalDials += row.goalDials;
+      acc.actualDials += row.actualDials;
+      acc.goalProspects += row.goalProspects;
+      acc.actualProspects += row.actualProspects;
+      acc.goalSetsNewBiz += row.goalSetsNewBiz;
+      acc.actualSetsNewBiz += row.actualSetsNewBiz;
+      acc.goalSetsExpansion += row.goalSetsExpansion;
+      acc.actualSetsExpansion += row.actualSetsExpansion;
+      acc.goalSetsTotal += row.goalSetsTotal;
+      acc.actualSetsTotal += row.actualSetsTotal;
+      acc.goalSQOs += row.goalSQOs;
+      acc.actualSQOs += row.actualSQOs;
+      return acc;
+    },
+    {
+      goalDials: 0,
+      actualDials: 0,
+      goalProspects: 0,
+      actualProspects: 0,
+      goalSetsNewBiz: 0,
+      actualSetsNewBiz: 0,
+      goalSetsExpansion: 0,
+      actualSetsExpansion: 0,
+      goalSetsTotal: 0,
+      actualSetsTotal: 0,
+      goalSQOs: 0,
+      actualSQOs: 0,
+    },
+  );
 
   const goalsVsActualsRows = reps.map((rep) => {
     let goalDials = 0;
@@ -597,68 +674,105 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
             Goals by Rep
           </h2>
           <p className="text-sm text-slate-500">
-            Today’s goals and target focus ({today})
+            Each rep’s most recent logged day — goal → actual
           </p>
         </div>
+        <p className="mt-1 text-xs text-slate-400">
+          <span className="text-emerald-600">✓</span> hit or exceeded goal{" "}
+          <span className="px-1">·</span>
+          <span className="text-rose-500">✗</span> missed goal
+        </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="text-xs uppercase text-slate-500">
               <tr>
                 <th className="py-2">Rep</th>
-                <th className="py-2">Goal Dials</th>
-                <th className="py-2">Goal Prospects</th>
-                <th className="py-2">Goal New Biz Sets</th>
-                <th className="py-2">Goal Upsell Sets</th>
-                <th className="py-2">Goal Sets</th>
-                <th className="py-2">Goal SQOs</th>
+                <th className="py-2">Day</th>
+                <th className="py-2">Dials</th>
+                <th className="py-2">Prospects</th>
+                <th className="py-2">New Biz Sets</th>
+                <th className="py-2">Upsell Sets</th>
+                <th className="py-2">Sets</th>
+                <th className="py-2">SQOs</th>
                 <th className="py-2">Target Focus</th>
               </tr>
             </thead>
             <tbody>
               {goalRows.length === 0 && (
                 <tr>
-                  <td className="py-3 text-slate-500" colSpan={8}>
-                    No goals in this range yet.
+                  <td className="py-3 text-slate-500" colSpan={9}>
+                    No reps yet.
                   </td>
                 </tr>
               )}
-              {goalRows.map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="py-2 font-medium text-slate-800">
-                    {row.name}
-                  </td>
-                  <td className="py-2">{row.goalDials}</td>
-                  <td className="py-2">{row.goalProspects}</td>
-                  <td className="py-2">{row.goalSetsNewBiz}</td>
-                  <td className="py-2">{row.goalSetsExpansion}</td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {row.goalSetsTotal}
-                  </td>
-                  <td className="py-2">{row.goalSQOs}</td>
-                  <td className="py-2 text-slate-700">{row.focusText}</td>
-                </tr>
-              ))}
-              {goalRows.length > 0 && (
+              {goalRows.map((row) =>
+                row.date === null ? (
+                  <tr key={row.id} className="border-t">
+                    <td className="py-2 font-medium text-slate-800">
+                      {row.name}
+                    </td>
+                    <td className="py-2 text-slate-400" colSpan={8}>
+                      No logged day yet
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={row.id} className="border-t">
+                    <td className="py-2 font-medium text-slate-800">
+                      {row.name}
+                    </td>
+                    <td className="py-2 text-slate-500">{row.date}</td>
+                    <GoalActualCell goal={row.goalDials} actual={row.actualDials} />
+                    <GoalActualCell
+                      goal={row.goalProspects}
+                      actual={row.actualProspects}
+                    />
+                    <GoalActualCell
+                      goal={row.goalSetsNewBiz}
+                      actual={row.actualSetsNewBiz}
+                    />
+                    <GoalActualCell
+                      goal={row.goalSetsExpansion}
+                      actual={row.actualSetsExpansion}
+                    />
+                    <GoalActualCell
+                      goal={row.goalSetsTotal}
+                      actual={row.actualSetsTotal}
+                    />
+                    <GoalActualCell goal={row.goalSQOs} actual={row.actualSQOs} />
+                    <td className="py-2 text-slate-700">{row.focusText}</td>
+                  </tr>
+                ),
+              )}
+              {goalRowsWithEntry.length > 0 && (
                 <tr className="border-t bg-slate-50">
-                  <td className="py-2 font-semibold text-slate-900">Team Total</td>
                   <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.dials}
+                    Team Total
                   </td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.prospects}
-                  </td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.setsNewBiz}
-                  </td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.setsExpansion}
-                  </td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.setsTotal}
-                  </td>
-                  <td className="py-2 font-semibold text-slate-900">
-                    {goalTotals.sqos}
-                  </td>
+                  <td className="py-2 text-slate-400">latest per rep</td>
+                  <GoalActualCell
+                    goal={goalRowTotals.goalDials}
+                    actual={goalRowTotals.actualDials}
+                  />
+                  <GoalActualCell
+                    goal={goalRowTotals.goalProspects}
+                    actual={goalRowTotals.actualProspects}
+                  />
+                  <GoalActualCell
+                    goal={goalRowTotals.goalSetsNewBiz}
+                    actual={goalRowTotals.actualSetsNewBiz}
+                  />
+                  <GoalActualCell
+                    goal={goalRowTotals.goalSetsExpansion}
+                    actual={goalRowTotals.actualSetsExpansion}
+                  />
+                  <GoalActualCell
+                    goal={goalRowTotals.goalSetsTotal}
+                    actual={goalRowTotals.actualSetsTotal}
+                  />
+                  <GoalActualCell
+                    goal={goalRowTotals.goalSQOs}
+                    actual={goalRowTotals.actualSQOs}
+                  />
                   <td className="py-2 text-slate-500">—</td>
                 </tr>
               )}

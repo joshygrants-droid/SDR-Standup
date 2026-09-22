@@ -5,15 +5,16 @@ import { managerLogin, selectRep } from "@/app/actions";
 export const dynamic = "force-dynamic";
 
 type HomeProps = {
-  searchParams?: { error?: string };
+  searchParams?: Promise<{ error?: string }>;
 };
 
 export default async function Home({ searchParams }: HomeProps) {
+  const params = searchParams ? await searchParams : {};
   const reps = await prisma.user.findMany({
     where: { role: Role.SDR },
     orderBy: { name: "asc" },
   });
-  const showManagerError = searchParams?.error === "invalid";
+  const showManagerError = params?.error === "invalid";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
