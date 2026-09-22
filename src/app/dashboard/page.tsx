@@ -81,24 +81,30 @@ function GoalActualCell({ goal, actual }: { goal: number; actual: number }) {
 
   if (!hasGoal) {
     return (
-      <td className="py-2">
+      <td className="py-2.5 pr-6 text-right tabular-nums whitespace-nowrap">
         <span className="text-slate-400">{actual}</span>
       </td>
     );
   }
 
   return (
-    <td className="py-2">
-      <span className="inline-flex items-center gap-1">
-        <span className="text-slate-500">{goal}</span>
+    <td className="py-2.5 pr-6 text-right tabular-nums whitespace-nowrap">
+      <span className="inline-flex items-center justify-end gap-1.5">
+        <span className="text-slate-400">{goal}</span>
         <span className="text-slate-300">→</span>
         <span className="font-semibold text-slate-900">{actual}</span>
         {met ? (
-          <span className="text-emerald-600" aria-label="hit or exceeded goal">
+          <span
+            className="text-base leading-none text-emerald-600"
+            aria-label="hit or exceeded goal"
+          >
             ✓
           </span>
         ) : (
-          <span className="text-rose-500" aria-label="missed goal">
+          <span
+            className="text-base leading-none text-rose-500"
+            aria-label="missed goal"
+          >
             ✗
           </span>
         )}
@@ -683,18 +689,18 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
           <span className="text-rose-500">✗</span> missed goal
         </p>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
-              <tr>
-                <th className="py-2">Rep</th>
-                <th className="py-2">Day</th>
-                <th className="py-2">Dials</th>
-                <th className="py-2">Prospects</th>
-                <th className="py-2">New Biz Sets</th>
-                <th className="py-2">Upsell Sets</th>
-                <th className="py-2">Sets</th>
-                <th className="py-2">SQOs</th>
-                <th className="py-2">Target Focus</th>
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-200">
+                <th className="py-2 pr-6 font-medium">Rep</th>
+                <th className="py-2 pr-6 font-medium">Day</th>
+                <th className="py-2 pr-6 text-right font-medium">Dials</th>
+                <th className="py-2 pr-6 text-right font-medium">Prospects</th>
+                <th className="py-2 pr-6 text-right font-medium">New Biz Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">SQOs</th>
+                <th className="py-2 font-medium">Target Focus</th>
               </tr>
             </thead>
             <tbody>
@@ -707,20 +713,22 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
               )}
               {goalRows.map((row) =>
                 row.date === null ? (
-                  <tr key={row.id} className="border-t">
-                    <td className="py-2 font-medium text-slate-800">
+                  <tr key={row.id} className="border-b border-slate-100">
+                    <td className="py-2.5 pr-6 font-medium text-slate-800 whitespace-nowrap">
                       {row.name}
                     </td>
-                    <td className="py-2 text-slate-400" colSpan={8}>
+                    <td className="py-2.5 text-slate-400" colSpan={8}>
                       No logged day yet
                     </td>
                   </tr>
                 ) : (
-                  <tr key={row.id} className="border-t">
-                    <td className="py-2 font-medium text-slate-800">
+                  <tr key={row.id} className="border-b border-slate-100">
+                    <td className="py-2.5 pr-6 font-medium text-slate-800 whitespace-nowrap">
                       {row.name}
                     </td>
-                    <td className="py-2 text-slate-500">{row.date}</td>
+                    <td className="py-2.5 pr-6 text-slate-500 tabular-nums whitespace-nowrap">
+                      {row.date}
+                    </td>
                     <GoalActualCell goal={row.goalDials} actual={row.actualDials} />
                     <GoalActualCell
                       goal={row.goalProspects}
@@ -739,16 +747,20 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                       actual={row.actualSetsTotal}
                     />
                     <GoalActualCell goal={row.goalSQOs} actual={row.actualSQOs} />
-                    <td className="py-2 text-slate-700">{row.focusText}</td>
+                    <td className="max-w-xs py-2.5 align-top text-slate-600">
+                      {row.focusText}
+                    </td>
                   </tr>
                 ),
               )}
               {goalRowsWithEntry.length > 0 && (
-                <tr className="border-t bg-slate-50">
-                  <td className="py-2 font-semibold text-slate-900">
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td className="py-2.5 pr-6 font-semibold text-slate-900 whitespace-nowrap">
                     Team Total
                   </td>
-                  <td className="py-2 text-slate-400">latest per rep</td>
+                  <td className="py-2.5 pr-6 text-xs text-slate-400 whitespace-nowrap">
+                    latest per rep
+                  </td>
                   <GoalActualCell
                     goal={goalRowTotals.goalDials}
                     actual={goalRowTotals.actualDials}
@@ -773,7 +785,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     goal={goalRowTotals.goalSQOs}
                     actual={goalRowTotals.actualSQOs}
                   />
-                  <td className="py-2 text-slate-500">—</td>
+                  <td className="py-2.5 text-slate-400">—</td>
                 </tr>
               )}
             </tbody>
