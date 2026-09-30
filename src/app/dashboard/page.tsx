@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getPresetRange, yesterdayISO } from "@/lib/date";
+import { getPresetRange, todayISO, yesterdayISO } from "@/lib/date";
 import { sumTotals, withSetsTotal } from "@/lib/metrics";
 import { CHECKLIST_ITEMS } from "@/lib/constants";
 import RangeForm from "@/app/dashboard/RangeForm";
@@ -298,6 +298,64 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       actualSetsTotal: 0,
       goalSQOs: 0,
       actualSQOs: 0,
+    },
+  );
+
+  // Today's submitted goals + target focus per rep. Goals are entered in the
+  // morning; that day's actuals are not entered until the next morning, so this
+  // is a forward-looking view (no goal-vs-actual comparison yet).
+  const today = todayISO();
+  const todayEntries = await prisma.dailyEntry.findMany({
+    where: { date: today },
+  });
+  const todayEntryByUserId = new Map(
+    todayEntries.map((entry) => [entry.userId, entry]),
+  );
+
+  const todayGoalRows = reps.map((rep) => {
+    const entry = todayEntryByUserId.get(rep.id);
+    const goalSetsNewBiz = entry?.goalSetsNewBiz ?? 0;
+    const goalSetsExpansion = entry?.goalSetsExpansion ?? 0;
+    const hasSubmitted =
+      !!entry &&
+      (entry.goalDials != null ||
+        entry.goalNewProspects != null ||
+        entry.goalSetsNewBiz != null ||
+        entry.goalSetsExpansion != null ||
+        entry.goalSQOs != null ||
+        !!entry.focusText);
+    return {
+      id: rep.id,
+      name: rep.name,
+      hasSubmitted,
+      goalDials: entry?.goalDials ?? 0,
+      goalProspects: entry?.goalNewProspects ?? 0,
+      goalSetsNewBiz,
+      goalSetsExpansion,
+      goalSetsTotal: goalSetsNewBiz + goalSetsExpansion,
+      goalSQOs: entry?.goalSQOs ?? 0,
+      focusText: entry?.focusText || "—",
+    };
+  });
+
+  const todayGoalRowsSubmitted = todayGoalRows.filter((r) => r.hasSubmitted);
+  const todayGoalTotals = todayGoalRowsSubmitted.reduce(
+    (acc, r) => {
+      acc.goalDials += r.goalDials;
+      acc.goalProspects += r.goalProspects;
+      acc.goalSetsNewBiz += r.goalSetsNewBiz;
+      acc.goalSetsExpansion += r.goalSetsExpansion;
+      acc.goalSetsTotal += r.goalSetsTotal;
+      acc.goalSQOs += r.goalSQOs;
+      return acc;
+    },
+    {
+      goalDials: 0,
+      goalProspects: 0,
+      goalSetsNewBiz: 0,
+      goalSetsExpansion: 0,
+      goalSetsTotal: 0,
+      goalSQOs: 0,
     },
   );
 
@@ -680,10 +738,121 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">
+            Today’s Goals &amp; Focus
+          </h2>
+          <p className="text-sm text-slate-500">
+            Goals and target focus submitted for today ({today})
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-200">
+                <th className="py-2 pr-6 font-medium">Rep</th>
+                <th className="py-2 pr-6 text-right font-medium">Dials</th>
+                <th className="py-2 pr-6 text-right font-medium">Prospects</th>
+                <th className="py-2 pr-6 text-right font-medium">New Biz Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">SQOs</th>
+                <th className="border-l border-slate-100 py-2 pl-6 font-medium">
+                  Target Focus
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {todayGoalRows.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={8}>
+                    No reps yet.
+                  </td>
+                </tr>
+              )}
+              {todayGoalRows.map((row) =>
+                row.hasSubmitted ? (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                      {row.name}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalDials}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalProspects}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSetsNewBiz}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSetsExpansion}
+                    </td>
+                    <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                      {row.goalSetsTotal}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSQOs}
+                    </td>
+                    <td className="max-w-xs border-l border-slate-100 py-3 pl-6 align-top text-slate-600">
+                      {row.focusText}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                      {row.name}
+                    </td>
+                    <td className="py-3 text-slate-400" colSpan={7}>
+                      Not submitted yet
+                    </td>
+                  </tr>
+                ),
+              )}
+              {todayGoalRowsSubmitted.length > 0 && (
+                <tr className="border-t-2 border-slate-200 bg-slate-100">
+                  <td className="py-3 pr-6 font-semibold text-slate-900 whitespace-nowrap">
+                    Team Total
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalDials}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalProspects}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsNewBiz}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsExpansion}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsTotal}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSQOs}
+                  </td>
+                  <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
+                    —
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
             Goals by Rep
           </h2>
           <p className="text-sm text-slate-500">
-            Each rep’s most recent logged day — goal → actual
+            Previous day’s results — most recent completed day, goal → actual
           </p>
         </div>
         <p className="mt-1 text-xs text-slate-400">
