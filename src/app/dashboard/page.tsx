@@ -427,22 +427,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
     };
   });
 
-  // Completion rate across the selected range (days completed / days logged).
-  const checklistRangeRows = reps.map((rep) => {
-    const daysLogged = rep.entries.length;
-    const perItem = CHECKLIST_ITEMS.map((item) => ({
-      key: item.key,
-      count: rep.entries.filter((e) => Boolean(e[item.key as keyof typeof e]))
-        .length,
-    }));
-    const totalChecks = perItem.reduce((acc, i) => acc + i.count, 0);
-    const rate =
-      daysLogged > 0
-        ? Math.round((totalChecks / (daysLogged * CHECKLIST_ITEMS.length)) * 100)
-        : 0;
-    return { id: rep.id, name: rep.name, daysLogged, perItem, rate };
-  });
-
   const sorted = [...rows].sort((a, b) => {
     if (sort === "name") {
       return direction === "asc"
@@ -583,71 +567,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">
-            Checklist Completion Rate
-          </h2>
-          <p className="text-sm text-slate-500">
-            Days completed / days logged ({start} through {end})
-          </p>
-        </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
-              <tr>
-                <th className="py-2">Rep</th>
-                <th className="py-2 text-center">Days Logged</th>
-                {CHECKLIST_ITEMS.map((item) => (
-                  <th key={item.key} className="py-2 text-center">
-                    {item.short}
-                  </th>
-                ))}
-                <th className="py-2 text-center">Overall</th>
-              </tr>
-            </thead>
-            <tbody>
-              {checklistRangeRows.length === 0 && (
-                <tr>
-                  <td
-                    className="py-3 text-slate-500"
-                    colSpan={CHECKLIST_ITEMS.length + 3}
-                  >
-                    No entries in this range yet.
-                  </td>
-                </tr>
-              )}
-              {checklistRangeRows.map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="py-2 font-medium text-slate-800">
-                    {row.name}
-                  </td>
-                  <td className="py-2 text-center text-slate-600">
-                    {row.daysLogged}
-                  </td>
-                  {row.perItem.map((item) => (
-                    <td key={item.key} className="py-2 text-center">
-                      {item.count}/{row.daysLogged}
-                    </td>
-                  ))}
-                  <td
-                    className={`py-2 text-center font-semibold ${
-                      row.rate >= 100
-                        ? "text-emerald-600"
-                        : row.rate >= 75
-                          ? "text-slate-700"
-                          : "text-amber-600"
-                    }`}
-                  >
-                    {row.rate}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">
             Leaderboard
           </h2>
           <p className="text-sm text-slate-500">
@@ -730,117 +649,6 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                   <td className="py-2">{row.sqos}</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Today’s Goals &amp; Focus
-          </h2>
-          <p className="text-sm text-slate-500">
-            Goals and target focus submitted for today ({today})
-          </p>
-        </div>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-500">
-              <tr className="border-b border-slate-200">
-                <th className="py-2 pr-6 font-medium">Rep</th>
-                <th className="py-2 pr-6 text-right font-medium">Dials</th>
-                <th className="py-2 pr-6 text-right font-medium">Prospects</th>
-                <th className="py-2 pr-6 text-right font-medium">New Biz Sets</th>
-                <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
-                <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
-                <th className="py-2 pr-6 text-right font-medium">SQOs</th>
-                <th className="border-l border-slate-100 py-2 pl-6 font-medium">
-                  Target Focus
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {todayGoalRows.length === 0 && (
-                <tr>
-                  <td className="py-3 text-slate-500" colSpan={8}>
-                    No reps yet.
-                  </td>
-                </tr>
-              )}
-              {todayGoalRows.map((row) =>
-                row.hasSubmitted ? (
-                  <tr
-                    key={row.id}
-                    className="border-b border-slate-100 even:bg-slate-50/60"
-                  >
-                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
-                      {row.name}
-                    </td>
-                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
-                      {row.goalDials}
-                    </td>
-                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
-                      {row.goalProspects}
-                    </td>
-                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
-                      {row.goalSetsNewBiz}
-                    </td>
-                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
-                      {row.goalSetsExpansion}
-                    </td>
-                    <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                      {row.goalSetsTotal}
-                    </td>
-                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
-                      {row.goalSQOs}
-                    </td>
-                    <td className="max-w-xs border-l border-slate-100 py-3 pl-6 align-top text-slate-600">
-                      {row.focusText}
-                    </td>
-                  </tr>
-                ) : (
-                  <tr
-                    key={row.id}
-                    className="border-b border-slate-100 even:bg-slate-50/60"
-                  >
-                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
-                      {row.name}
-                    </td>
-                    <td className="py-3 text-slate-400" colSpan={7}>
-                      Not submitted yet
-                    </td>
-                  </tr>
-                ),
-              )}
-              {todayGoalRowsSubmitted.length > 0 && (
-                <tr className="border-t-2 border-slate-200 bg-slate-100">
-                  <td className="py-3 pr-6 font-semibold text-slate-900 whitespace-nowrap">
-                    Team Total
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalDials}
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalProspects}
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalSetsNewBiz}
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalSetsExpansion}
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalSetsTotal}
-                  </td>
-                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
-                    {todayGoalTotals.goalSQOs}
-                  </td>
-                  <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
-                    —
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -965,6 +773,117 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     goal={goalRowTotals.goalSQOs}
                     actual={goalRowTotals.actualSQOs}
                   />
+                  <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
+                    —
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Today’s Goals &amp; Focus
+          </h2>
+          <p className="text-sm text-slate-500">
+            Goals and target focus submitted for today ({today})
+          </p>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-200">
+                <th className="py-2 pr-6 font-medium">Rep</th>
+                <th className="py-2 pr-6 text-right font-medium">Dials</th>
+                <th className="py-2 pr-6 text-right font-medium">Prospects</th>
+                <th className="py-2 pr-6 text-right font-medium">New Biz Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
+                <th className="py-2 pr-6 text-right font-medium">SQOs</th>
+                <th className="border-l border-slate-100 py-2 pl-6 font-medium">
+                  Target Focus
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {todayGoalRows.length === 0 && (
+                <tr>
+                  <td className="py-3 text-slate-500" colSpan={8}>
+                    No reps yet.
+                  </td>
+                </tr>
+              )}
+              {todayGoalRows.map((row) =>
+                row.hasSubmitted ? (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                      {row.name}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalDials}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalProspects}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSetsNewBiz}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSetsExpansion}
+                    </td>
+                    <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                      {row.goalSetsTotal}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.goalSQOs}
+                    </td>
+                    <td className="max-w-xs border-l border-slate-100 py-3 pl-6 align-top text-slate-600">
+                      {row.focusText}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 even:bg-slate-50/60"
+                  >
+                    <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
+                      {row.name}
+                    </td>
+                    <td className="py-3 text-slate-400" colSpan={7}>
+                      Not submitted yet
+                    </td>
+                  </tr>
+                ),
+              )}
+              {todayGoalRowsSubmitted.length > 0 && (
+                <tr className="border-t-2 border-slate-200 bg-slate-100">
+                  <td className="py-3 pr-6 font-semibold text-slate-900 whitespace-nowrap">
+                    Team Total
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalDials}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalProspects}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsNewBiz}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsExpansion}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSetsTotal}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.goalSQOs}
+                  </td>
                   <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
                     —
                   </td>
