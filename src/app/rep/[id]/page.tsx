@@ -67,6 +67,8 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
   const goalSetsNewBiz = todayEntry?.goalSetsNewBiz ?? "";
   const goalSetsExpansion = todayEntry?.goalSetsExpansion ?? "";
   const goalSQOs = todayEntry?.goalSQOs ?? "";
+  const meetingsToday = todayEntry?.meetingsToday ?? "";
+  const sqosToPush = todayEntry?.sqosToPush ?? "";
   const focusText = todayEntry?.focusText ?? "";
 
   const actualDials = yesterdayEntry?.actualDials ?? "";
@@ -207,6 +209,29 @@ export default async function RepStandupPage({ params, searchParams }: RepPagePr
                   type="number"
                   min="0"
                   defaultValue={goalSetsExpansion}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-700">
+                Meetings Set for Today
+                <input
+                  name="meetingsToday"
+                  type="number"
+                  min="0"
+                  defaultValue={meetingsToday}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                SQOs to Be Pushed
+                <input
+                  name="sqosToPush"
+                  type="number"
+                  min="0"
+                  defaultValue={sqosToPush}
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </label>

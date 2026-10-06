@@ -41,6 +41,8 @@ export default async function RepHistoryPage({
   const goalSetsNewBiz = entry?.goalSetsNewBiz ?? "";
   const goalSetsExpansion = entry?.goalSetsExpansion ?? "";
   const goalSQOs = entry?.goalSQOs ?? "";
+  const meetingsToday = entry?.meetingsToday ?? "";
+  const sqosToPush = entry?.sqosToPush ?? "";
   const focusText = entry?.focusText ?? "";
 
   const actualDials = entry?.actualDials ?? "";
@@ -204,6 +206,29 @@ export default async function RepHistoryPage({
                   type="number"
                   min="0"
                   defaultValue={goalSetsExpansion}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-700">
+                Meetings Set for Today
+                <input
+                  name="meetingsToday"
+                  type="number"
+                  min="0"
+                  defaultValue={meetingsToday}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-slate-700">
+                SQOs to Be Pushed
+                <input
+                  name="sqosToPush"
+                  type="number"
+                  min="0"
+                  defaultValue={sqosToPush}
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </label>

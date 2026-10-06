@@ -323,6 +323,8 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
         entry.goalSetsNewBiz != null ||
         entry.goalSetsExpansion != null ||
         entry.goalSQOs != null ||
+        entry.meetingsToday != null ||
+        entry.sqosToPush != null ||
         !!entry.focusText);
     return {
       id: rep.id,
@@ -334,6 +336,8 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       goalSetsExpansion,
       goalSetsTotal: goalSetsNewBiz + goalSetsExpansion,
       goalSQOs: entry?.goalSQOs ?? 0,
+      meetingsToday: entry?.meetingsToday ?? 0,
+      sqosToPush: entry?.sqosToPush ?? 0,
       focusText: entry?.focusText || "—",
     };
   });
@@ -347,6 +351,8 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       acc.goalSetsExpansion += r.goalSetsExpansion;
       acc.goalSetsTotal += r.goalSetsTotal;
       acc.goalSQOs += r.goalSQOs;
+      acc.meetingsToday += r.meetingsToday;
+      acc.sqosToPush += r.sqosToPush;
       return acc;
     },
     {
@@ -356,6 +362,8 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
       goalSetsExpansion: 0,
       goalSetsTotal: 0,
       goalSQOs: 0,
+      meetingsToday: 0,
+      sqosToPush: 0,
     },
   );
 
@@ -803,6 +811,12 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                 <th className="py-2 pr-6 text-right font-medium">Upsell Sets</th>
                 <th className="py-2 pr-6 text-right font-medium">Total Sets</th>
                 <th className="py-2 pr-6 text-right font-medium">SQOs</th>
+                <th className="py-2 pr-6 text-right font-medium">
+                  Meetings Today
+                </th>
+                <th className="py-2 pr-6 text-right font-medium">
+                  SQOs to Push
+                </th>
                 <th className="border-l border-slate-100 py-2 pl-6 font-medium">
                   Target Focus
                 </th>
@@ -811,7 +825,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
             <tbody>
               {todayGoalRows.length === 0 && (
                 <tr>
-                  <td className="py-3 text-slate-500" colSpan={8}>
+                  <td className="py-3 text-slate-500" colSpan={10}>
                     No reps yet.
                   </td>
                 </tr>
@@ -843,6 +857,12 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
                       {row.goalSQOs}
                     </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.meetingsToday}
+                    </td>
+                    <td className="py-3 pr-6 text-right tabular-nums text-slate-900">
+                      {row.sqosToPush}
+                    </td>
                     <td className="max-w-xs border-l border-slate-100 py-3 pl-6 align-top text-slate-600">
                       {row.focusText}
                     </td>
@@ -855,7 +875,7 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                     <td className="py-3 pr-6 font-medium text-slate-800 whitespace-nowrap">
                       {row.name}
                     </td>
-                    <td className="py-3 text-slate-400" colSpan={7}>
+                    <td className="py-3 text-slate-400" colSpan={9}>
                       Not submitted yet
                     </td>
                   </tr>
@@ -883,6 +903,12 @@ export default async function DashboardPage({ searchParams }: DashboardProps) {
                   </td>
                   <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
                     {todayGoalTotals.goalSQOs}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.meetingsToday}
+                  </td>
+                  <td className="py-3 pr-6 text-right font-semibold tabular-nums text-slate-900">
+                    {todayGoalTotals.sqosToPush}
                   </td>
                   <td className="border-l border-slate-100 py-3 pl-6 text-slate-400">
                     —

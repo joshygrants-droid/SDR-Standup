@@ -203,6 +203,8 @@ export async function saveGoals(formData: FormData) {
     goalSetsNewBiz: parseIntField(formData.get("goalSetsNewBiz")),
     goalSetsExpansion: parseIntField(formData.get("goalSetsExpansion")),
     goalSQOs: parseIntField(formData.get("goalSQOs")),
+    meetingsToday: parseIntField(formData.get("meetingsToday")),
+    sqosToPush: parseIntField(formData.get("sqosToPush")),
     focusText: String(formData.get("focusText") || "").trim() || null,
   };
 
@@ -272,6 +274,8 @@ export async function saveStandup(formData: FormData) {
     goalSetsNewBiz: parseIntField(formData.get("goalSetsNewBiz")),
     goalSetsExpansion: parseIntField(formData.get("goalSetsExpansion")),
     goalSQOs: parseIntField(formData.get("goalSQOs")),
+    meetingsToday: parseIntField(formData.get("meetingsToday")),
+    sqosToPush: parseIntField(formData.get("sqosToPush")),
     focusText: String(formData.get("focusText") || "").trim() || null,
   };
 

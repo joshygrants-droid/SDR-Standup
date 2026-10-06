@@ -32,6 +32,8 @@ model DailyEntry {
   goalSetsNewBiz         Int?
   goalSetsExpansion      Int?
   goalSQOs               Int?
+  meetingsToday          Int?
+  sqosToPush             Int?
   focusText              String?
   actualDials            Int?
   actualNewProspects     Int?
