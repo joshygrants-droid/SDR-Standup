@@ -73,13 +73,13 @@ const isDirection = (value?: string): value is SortDirection =>
   value === "asc" || value === "desc";
 
 // Renders a "goal → actual" cell with a hit/miss indicator. Green ✓ when the
-// actual met or exceeded the goal, red ✗ when it fell short. When no goal was
-// set for the metric, we can't judge hit/miss, so just show the actual.
+// actual met or exceeded the goal (including any actual above a goal of 0),
+// red ✗ when it fell short. When both are 0 there's nothing to judge, so the
+// cell stays neutral.
 function GoalActualCell({ goal, actual }: { goal: number; actual: number }) {
-  const hasGoal = goal > 0;
   const met = actual >= goal;
 
-  if (!hasGoal) {
+  if (goal <= 0 && actual <= 0) {
     return (
       <td className="py-3 pr-6 text-right tabular-nums whitespace-nowrap text-slate-300">
         {actual}
